@@ -15,6 +15,27 @@ import wx
 from typing import List, Optional
 
 
+def select_output_folder(title="Select output folder"):
+    """Prompt user to select an output directory.
+
+    Args:
+        title: Dialog title.
+
+    Returns:
+        str: Selected directory path, or None if cancelled.
+    """
+    _ensure_app()
+    dlg = wx.DirDialog(None, message=title,
+                       style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+    dlg.CentreOnScreen()
+    try:
+        if dlg.ShowModal() == wx.ID_OK:
+            return dlg.GetPath()
+        return None
+    finally:
+        dlg.Destroy()
+
+
 def _ensure_app():
     """Return the existing wx.App or create one if none exists."""
     app = wx.GetApp()

@@ -1,59 +1,18 @@
 import os
-import pandas as pd
-import glob
-import shutil
 import sys
-sys.path.insert(0, '.')
+
+# Add project root to path so Helpers can be imported
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import pandas as pd
+import shutil
+import wx
 from openpyxl import load_workbook
 from xlrd import open_workbook
 from xlutils.copy import copy
-from tool_box.Helpers.Clean_fields.clean_field import field_cleaner
-
-# Determine repo root for relative paths
-script_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.abspath(os.path.join(script_dir, '..', '..', '..'))
-
-TESTING = True
-TESTING_FILES_FOLDER = os.path.join(repo_root, 'ZZSample_Files', 'Test_Files', 'MOL')
-TESTING_SIF_PATH = os.path.join(repo_root, 'ZZSample_Files', 'SIF10Students.xlsx')
-TESTING_OUTPUT_FOLDER = os.path.join(repo_root, 'ZZSample_Files', 'TEST_outputs')
-
-"""
-===============================================================================
-MOI Swapper Script
-===============================================================================
-
-Description:
-This script processes "Mathematics Online Interview Insight Platform Template"
-Excel files (.xls and .xlsx) in a specified folder and its subfolders, swaps
-student IDs based on a Student Information File (SIF), and saves modified copies
-to an output folder named 'MOIswapped'.
-
-Steps performed:
-1. Prompts the user for the input folder containing .xls/.xlsx files to process.
-2. Prompts for the location of the SIF Excel file (with headers in row 2).
-3. Prompts for the output directory where 'MOIswapped' will be created.
-4. Loads the SIF file into a DataFrame.
-5. Recursively finds all .xls/.xlsx files in the input folder.
-6. For each file:
-   - Finds the 'Student' and 'ID' columns in the active sheet.
-   - Parses student names (expected format: "Surname, Firstname").
-   - Matches students against SIF by Firstname and Surname (case-insensitive).
-   - Replaces the ID with the SIF StudentID if found; logs to Excel if not.
-   - Prints progress to console.
-7. Saves modified files to the MOIswapped folder.
-
-Requirements:
-- Python with pandas, openpyxl installed.
-- SIF file must have columns: 'Surname', 'Firstname', 'StudentID'.
-- Input files must have 'Student' and 'ID' headers in the first sheet.
-
-Usage:
-Run the script: python MOI.py
-Follow the prompts to enter paths.
-
-===============================================================================
-"""
+from Helpers.Clean_fields.clean_field import field_cleaner
+from Helpers.dog_box import select_sif, select_work_files, select_output_folder
+from water_logged.the_logger import THElogger
 
 # Global constants for headers
 FILE_STUDENT_HEADER = "Student" ## Stored as "Surname, Firstname"
@@ -64,145 +23,115 @@ SIF_FIRSTNAME = "Firstname"
 SIF_STUDENTID = "StudentID"
 
 
-print(r"""
-===================================================================================================
-___  ________ _____            ___________  
-|  \/  |  _  |_   _|          |_   _|  _  \                                        
-| .  . | | | | | |    ______    | | | | | |_____      ____ _ _ __  _ __   ___ _ __ 
-| |\/| | | | | | |   |______|   | | | | | / __\ \ /\ / / _` | '_ \| '_ \ / _ \ '__|
-| |  | \ \_/ /_| |_            _| |_| |/ /\__ \\ V  V / (_| | |_) | |_) |  __/ |   
-\_|  |_/\___/ \___/            \___/|___/ |___/ \_/\_/ \__,_| .__/| .__/ \___|_|   
-                                                            | |   | |              
-                                                            |_|   |_|              
-===================================================================================================
-""")
-def get_user_inputs():
-    example_folder = os.path.join(os.path.expanduser('~'), 'Desktop', 'SFDS', 'SORTED', 'PAT')
-    folder = input(f"Enter the folder location containing .xls and .xlsx files to swap (e.g., {example_folder}): ").strip('"').strip("'")
-    example_sif = os.path.join(os.path.expanduser('~'), 'Desktop', 'ZZZ2025SIF.xlsx')
-    sif_path = input(f"Enter the location of the SIF file (e.g., {example_sif}): ").strip('"').strip("'")
-    example_output = os.path.join(os.path.expanduser('~'), 'Desktop', 'SwappedSFDS')
-    output_dir = input(f"Enter the output directory where MOIswapped will be created (e.g., {example_output}): ").strip('"').strip("'")
-    return folder, sif_path, output_dir
+class MOISwapper:
+    """
+    MOI (Mathematics Online Interview Insight Platform) Swapper.
 
-if TESTING:
-    print(f"Using test values: Folder={TESTING_FILES_FOLDER}, SIF={TESTING_SIF_PATH}, Output={TESTING_OUTPUT_FOLDER}")
-    use_test = input("Do you want to continue using Test data or Enter actual data locations? Y or N: ").strip().upper()
-    if use_test == 'Y':
-        folder = TESTING_FILES_FOLDER
-        sif_path = TESTING_SIF_PATH
-        output_dir = TESTING_OUTPUT_FOLDER
-    else:
-        folder, sif_path, output_dir = get_user_inputs()
-else:
-    folder, sif_path, output_dir = get_user_inputs()
+    Processes Excel files (.xls and .xlsx) to swap student IDs based on a
+    Student Information File (SIF).
+    """
 
-print(f"Using values: Folder={folder}, SIF={sif_path}, Output={output_dir}")
-moi_folder = os.path.join(output_dir, "MOIswapped")
-while os.path.exists(moi_folder):
-    print("")
-    print("===================================================================================================")
-    print(f"Error >> {moi_folder} already exists.")
-    print("")
-    choice = input(f"Do you want to (r)emove it, (m)ove to a new location, or (q)uit? (r/m/q): ").lower().strip()
-    if choice == 'r':
-        shutil.rmtree(moi_folder)
-        print(f"Removed {moi_folder}.")
-    elif choice == 'm':
-        new_dir = input("Enter new output directory: ")
-        moi_folder = os.path.join(new_dir, "MOIswapped")
-        print(f"Changed to {moi_folder}.")
-    elif choice == 'q':
-        print("Exiting.")
-        exit()
-    else:
-        print("Invalid choice. Please enter r, m, or q.")
+    def __init__(self, logger):
+        """Initialize MOI Swapper with logger."""
+        self.logger = logger
+        self.sif_df = None
+        self.moi_folder = None
+        self.skipped_folder = None
+        self.not_found = []
+        self.total_checked = 0
+        self.total_matched = 0
+        self.files_checked = []
+        self.files_skipped = []
 
-# Check if parent directory exists
-parent_dir = os.path.dirname(moi_folder)
-if not os.path.exists(parent_dir):
-    create = input(f"The directory '{parent_dir}' does not exist. Do you want to create it? (y/n): ").lower().strip()
-    if create == 'y':
-        os.makedirs(parent_dir, exist_ok=True)
-        print(f"Created directory: {parent_dir}")
-    else:
-        print("Please enter a different output directory.")
-        new_dir = input("Enter new output directory: ")
-        moi_folder = os.path.join(new_dir, "MOIswapped")
-        print(f"Changed to {moi_folder}.")
-        # Recheck the new location
-        while os.path.exists(moi_folder):
-            print("")
-            print("===================================================================================================")
-            print(f"Error >> {moi_folder} already exists.")
-            print("")
-            choice = input(f"Do you want to (r)emove it, (m)ove to a new location, or (q)uit? (r/m/q): ").lower().strip()
-            if choice == 'r':
-                shutil.rmtree(moi_folder)
-                print(f"Removed {moi_folder}.")
-            elif choice == 'm':
-                new_dir = input("Enter new output directory: ")
-                moi_folder = os.path.join(new_dir, "MOIswapped")
-                print(f"Changed to {moi_folder}.")
-            elif choice == 'q':
-                print("Exiting.")
-                exit()
-            else:
-                print("Invalid choice. Please enter r, m, or q.")
-        # Now check parent again for the new location
-        parent_dir = os.path.dirname(moi_folder)
-        if not os.path.exists(parent_dir):
-            create = input(f"The directory '{parent_dir}' does not exist. Do you want to create it? (y/n): ").lower().strip()
-            if create == 'y':
-                os.makedirs(parent_dir, exist_ok=True)
-                print(f"Created directory: {parent_dir}")
-            else:
-                print("Exiting due to invalid directory.")
-                exit()
+    def run(self):
+        """Execute the MOI swapping process."""
+        try:
+            # Step 1: Get user inputs using dog_box helpers
+            sif_path = select_sif()
+            if sif_path is None:
+                self.logger.info("User cancelled SIF selection.")
+                self.logger.finalize_report()
+                return
 
-os.mkdir(moi_folder)
+            files = select_work_files([".xlsx", ".xls", ".xlsm"])
+            if not files:
+                self.logger.info("No files selected.")
+                self.logger.finalize_report()
+                return
 
-skipped_folder = os.path.join(moi_folder, "SKIPPED")
-os.makedirs(skipped_folder, exist_ok=True)
+            # Filter out temporary Excel files
+            files = [f for f in files if not os.path.basename(f).startswith('~$')]
 
-# Step 4: Load SIF dataframe
-sif_df = pd.read_excel(sif_path, header=1)  # Headers in row 2 (0-indexed as 1)
-sif_df[SIF_FIRSTNAME] = sif_df[SIF_FIRSTNAME].apply(field_cleaner)
-sif_df[SIF_SURNAME] = sif_df[SIF_SURNAME].apply(field_cleaner)
+            output_dir = select_output_folder("Select output folder for MOI")
+            if output_dir is None:
+                self.logger.info("User cancelled output folder selection.")
+                self.logger.finalize_report()
+                return
 
-# Get all files (including in subfolders) or single file
-if os.path.isfile(folder):
-    files = [folder]
-else:
-    files = glob.glob(os.path.join(folder, "**", "*"), recursive=True)
-    # Filter out temporary Excel files and directories
-    files = [f for f in files if not os.path.basename(f).startswith('~$') and os.path.isfile(f)]
+            self.logger.info(f"Using values: SIF={sif_path}, Files={len(files)}, Output={output_dir}")
 
-print(f"Total files to process: {len(files)}")
+            # Step 2: Setup output folder
+            output_subfolder = os.path.join(output_dir, "MOIswapped")
+            if os.path.exists(output_subfolder):
+                result = wx.MessageBox(
+                    f"{output_subfolder} already exists.\nRemove it and continue?",
+                    "Output Folder Exists", wx.YES_NO | wx.ICON_WARNING)
+                if result == wx.YES:
+                    shutil.rmtree(output_subfolder)
+                else:
+                    self.logger.info("User cancelled due to existing output folder.")
+                    self.logger.finalize_report()
+                    return
 
-# List to log not found students
-not_found = []
+            self.moi_folder = output_subfolder
+            os.mkdir(self.moi_folder)
 
-# Counters
-total_checked = 0
-total_matched = 0
+            self.skipped_folder = os.path.join(self.moi_folder, "SKIPPED")
+            os.makedirs(self.skipped_folder, exist_ok=True)
 
-# Track files
-files_checked = []
-files_skipped = []
+            # Step 3: Load SIF dataframe
+            self.sif_df = pd.read_excel(sif_path, header=1)  # Headers in row 2 (0-indexed as 1)
+            self.sif_df[SIF_FIRSTNAME] = self.sif_df[SIF_FIRSTNAME].apply(field_cleaner)
+            self.sif_df[SIF_SURNAME] = self.sif_df[SIF_SURNAME].apply(field_cleaner)
 
-# Step 4-7: Process each file
-file_count = 0
-for file in files:
-    file_count += 1
-    print(f"Processing file {file_count}/{len(files)} > {file}")
-    
-    # Per-file counters
-    file_checked = 0
-    file_matched = 0
-    file_not_found = 0
-    
-    if '.xlsx' in file.lower() or '.xlsm' in file.lower():
+            self.logger.info(f"Total files to process: {len(files)}")
+
+            # Step 4-7: Process each file
+            for file_count, file in enumerate(files, 1):
+                self.logger.info(f"Processing file {file_count}/{len(files)} > {file}")
+                self._process_file(file)
+
+            # Step 8: Save report
+            self._save_report()
+
+            self.logger.info(f"Total Students Checked --> {self.total_checked}")
+            self.logger.info(f"Total Students Matched --> {self.total_matched}")
+            self.logger.info(f"Total NOT Found --> {len(self.not_found)}")
+            self.logger.info(f"Processing complete. Files saved in {self.moi_folder} folder.")
+
+        except Exception as e:
+            self.logger.error(f"Error during MOI processing: {e}")
+        finally:
+            self.logger.finalize_report()
+
+    def _process_file(self, file):
+        """Process a single file (xlsx/xlsm or xls)."""
+        # Per-file counters
+        file_checked = 0
+        file_matched = 0
+        file_not_found = 0
+
+        if '.xlsx' in file.lower() or '.xlsm' in file.lower():
+            self._process_xlsx(file, file_checked, file_matched, file_not_found)
+        elif '.xls' in file.lower():
+            self._process_xls(file, file_checked, file_matched, file_not_found)
+        else:
+            self.logger.info(f"Unsupported file format: {file}. Skipping.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
+
+    def _process_xlsx(self, file, file_checked, file_matched, file_not_found):
+        """Process .xlsx/.xlsm file."""
         wb = load_workbook(file)
         ws = wb.active  # Assume first sheet
 
@@ -219,10 +148,10 @@ for file in files:
                 break
 
         if not student_col:
-            print(f"Warning: '{FILE_STUDENT_HEADER}' header not found in {file}. Skipping.")
-            files_skipped.append(os.path.basename(file))
-            shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
-            continue
+            self.logger.info(f"Warning: '{FILE_STUDENT_HEADER}' header not found in {file}. Skipping.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
+            return
 
         # Find "ID" in the header row
         id_col = None
@@ -232,10 +161,10 @@ for file in files:
                 break
 
         if not id_col:
-            print(f"Warning: '{FILE_ID_HEADER}' header not found in {file}. Skipping.")
-            files_skipped.append(os.path.basename(file))
-            shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
-            continue
+            self.logger.info(f"Warning: '{FILE_ID_HEADER}' header not found in {file}. Skipping.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
+            return
 
         # Find "Date" in the header row
         date_col = None
@@ -244,7 +173,7 @@ for file in files:
                 date_col = cell.column_letter
                 break
 
-        files_checked.append(os.path.basename(file))
+        self.files_checked.append(os.path.basename(file))
 
         # Process each student row
         for row in range(header_row + 1, ws.max_row + 1):
@@ -252,8 +181,7 @@ for file in files:
             id_cell = ws[f"{id_col}{row}"]
             name = name_cell.value
             if name and isinstance(name, str):
-                #print(f"Checking student: {name}")
-                total_checked += 1
+                self.total_checked += 1
                 file_checked += 1
                 # Parse name: "Brown, Florence" -> Lname=Brown, Fname=Florence
                 if ", " in name:
@@ -262,7 +190,7 @@ for file in files:
                     lname = field_cleaner(lname)
                 else:
                     # If not in expected format, skip or handle
-                    print(f"Warning: Name format not recognized in {file} row {row}: {name}")
+                    self.logger.info(f"Warning: Name format not recognized in {file} row {row}: {name}")
                     continue
 
                 # Get date for year
@@ -281,34 +209,34 @@ for file in files:
                                 year = parts[2].split()[0]
 
                 # Find in SIF
-                match = sif_df[(sif_df[SIF_FIRSTNAME] == fname) & (sif_df[SIF_SURNAME] == lname)]
+                match = self.sif_df[(self.sif_df[SIF_FIRSTNAME] == fname) & (self.sif_df[SIF_SURNAME] == lname)]
                 if not match.empty:
                     new_id = match[SIF_STUDENTID].iloc[0]
                     id_cell.value = new_id
-                    total_matched += 1
+                    self.total_matched += 1
                     file_matched += 1
-                    #print("Found")
                 else:
-                    not_found.append({'File': file, 'Row': row, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
+                    self.not_found.append({'File': file, 'Row': row, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
                     file_not_found += 1
-                    print(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
+                    self.logger.info(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
 
         # Save to MOIswapped
-        output_path = os.path.join(moi_folder, os.path.basename(file))
+        output_path = os.path.join(self.moi_folder, os.path.basename(file))
         try:
             wb.save(output_path)
         except Exception as e:
-            print(f"Error saving {output_path}: {e}")
-            input("Please close the file in Excel and press Enter to retry.")
+            self.logger.error(f"Error saving {output_path}: {e}")
             try:
                 wb.save(output_path)
             except Exception as e2:
-                print(f"Failed again: {e2}. Skipping save for {file}.")
-        print(f"Students Checked: {file_checked}")
-        print(f"Students Matched: {file_matched}")
-        print(f"Students NOT Found: {file_not_found}")
+                self.logger.error(f"Failed again: {e2}. Skipping save for {file}.")
 
-    elif '.xls' in file.lower():
+        self.logger.info(f"Students Checked: {file_checked}")
+        self.logger.info(f"Students Matched: {file_matched}")
+        self.logger.info(f"Students NOT Found: {file_not_found}")
+
+    def _process_xls(self, file, file_checked, file_matched, file_not_found):
+        """Process .xls file."""
         rb = open_workbook(file, formatting_info=True)
         wb = copy(rb)
         ws = wb.get_sheet(0)
@@ -333,20 +261,19 @@ for file in files:
                 break
 
         if student_col is None or id_col is None:
-            print(f"Warning: Required headers not found in {file}. Skipping.")
-            files_skipped.append(os.path.basename(file))
-            shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
-            continue
+            self.logger.info(f"Warning: Required headers not found in {file}. Skipping.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
+            return
 
-        files_checked.append(os.path.basename(file))
+        self.files_checked.append(os.path.basename(file))
 
         # Process each student row
         for row_idx in range(header_row + 1, sheet.nrows):
             name = sheet.cell_value(row_idx, student_col)
             if name:
                 name = str(name).strip()
-                #print(f"Checking student: {name}")
-                total_checked += 1
+                self.total_checked += 1
                 file_checked += 1
                 # Parse name: "Brown, Florence" -> Lname=Brown, Fname=Florence
                 if ", " in name:
@@ -355,7 +282,7 @@ for file in files:
                     lname = field_cleaner(lname)
                 else:
                     # If not in expected format, skip or handle
-                    print(f"Warning: Name format not recognized in {file} row {row_idx + 1}: {name}")
+                    self.logger.info(f"Warning: Name format not recognized in {file} row {row_idx + 1}: {name}")
                     continue
 
                 # Get date for year
@@ -383,67 +310,87 @@ for file in files:
                                     year = parts[2].split()[0]
 
                 # Find in SIF
-                match = sif_df[(sif_df[SIF_FIRSTNAME] == fname) & (sif_df[SIF_SURNAME] == lname)]
+                match = self.sif_df[(self.sif_df[SIF_FIRSTNAME] == fname) & (self.sif_df[SIF_SURNAME] == lname)]
                 if not match.empty:
                     new_id = match[SIF_STUDENTID].iloc[0]
                     ws.write(row_idx, id_col, new_id)
-                    total_matched += 1
+                    self.total_matched += 1
                     file_matched += 1
-                    #print("Found")
                 else:
-                    not_found.append({'File': file, 'Row': row_idx + 1, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
+                    self.not_found.append({'File': file, 'Row': row_idx + 1, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
                     file_not_found += 1
-                    print(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
+                    self.logger.info(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
 
         # Save to MOIswapped
-        output_path = os.path.join(moi_folder, os.path.basename(file))
+        output_path = os.path.join(self.moi_folder, os.path.basename(file))
         try:
             wb.save(output_path)
         except Exception as e:
-            print(f"Error saving {output_path}: {e}")
-            input("Please close the file in Excel and press Enter to retry.")
+            self.logger.error(f"Error saving {output_path}: {e}")
             try:
                 wb.save(output_path)
             except Exception as e2:
-                print(f"Failed again: {e2}. Skipping save for {file}.")
-        print(f"Students Checked: {file_checked}")
-        print(f"Students Matched: {file_matched}")
-        print(f"Students NOT Found: {file_not_found}")
-    else:
-        print(f"Unsupported file format: {file}. Skipping.")
-        files_skipped.append(os.path.basename(file))
-        shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
+                self.logger.error(f"Failed again: {e2}. Skipping save for {file}.")
+
+        self.logger.info(f"Students Checked: {file_checked}")
+        self.logger.info(f"Students Matched: {file_matched}")
+        self.logger.info(f"Students NOT Found: {file_not_found}")
+
+    def _save_report(self):
+        """Save processing report to Excel."""
+        if not self.not_found and not self.files_checked and not self.files_skipped:
+            return
+
+        # Create summary data
+        summary_data = [
+            {'Metric': 'Total Files Processed', 'Value': len(self.files_checked)},
+            {'Metric': 'Total Matched', 'Value': self.total_matched},
+            {'Metric': 'Total NOT Matched', 'Value': len(self.not_found)},
+            {'Metric': 'Note', 'Value': 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'},
+        ]
+        summary_df = pd.DataFrame(summary_data)
+
+        not_found_df = pd.DataFrame(self.not_found)
+
+        with pd.ExcelWriter(os.path.join(self.moi_folder, "MOI_report.xlsx")) as writer:
+            summary_df.to_excel(writer, sheet_name='Summary', index=False)
+            not_found_df.to_excel(writer, sheet_name='Full List', index=False)
+
+            # Add files lists to Summary sheet
+            sheet = writer.sheets['Summary']
+            sheet.cell(row=7, column=1).value = "Files Checked"
+            for i, file in enumerate(self.files_checked, start=8):
+                sheet.cell(row=i, column=1).value = file
+
+            sheet.cell(row=7, column=2).value = "Files Skipped"
+            for i, file in enumerate(self.files_skipped, start=8):
+                sheet.cell(row=i, column=2).value = file
 
 
-# Save report
-if not_found or files_checked or files_skipped:
-    # Create summary data
-    summary_data = [
-        {'Metric': 'Total Files Processed', 'Value': len(files_checked)},
-        {'Metric': 'Total Matched', 'Value': total_matched},
-        {'Metric': 'Total NOT Matched', 'Value': len(not_found)},
-        {'Metric': 'Note', 'Value': 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'},
-    ]
-    summary_df = pd.DataFrame(summary_data)
-    
-    not_found_df = pd.DataFrame(not_found)
-    
-    with pd.ExcelWriter(os.path.join(moi_folder, "MOI_report.xlsx")) as writer:
-        summary_df.to_excel(writer, sheet_name='Summary', index=False)
-        not_found_df.to_excel(writer, sheet_name='Full List', index=False)
-        
-        # Add files lists to Summary sheet
-        sheet = writer.sheets['Summary']
-        sheet.cell(row=7, column=1).value = "Files Checked"
-        for i, file in enumerate(files_checked, start=8):
-            sheet.cell(row=i, column=1).value = file
-        
-        sheet.cell(row=7, column=2).value = "Files Skipped"
-        for i, file in enumerate(files_skipped, start=8):
-            sheet.cell(row=i, column=2).value = file
+def main():
+    """Main entry point for MOI Swapper."""
+    print(r"""
+===================================================================================================
+___  ________ _____            ___________
+|  \/  |  _  |_   _|          |_   _|  _  \
+| .  . | | | | | |    ______    | | | | | |_____      ____ _ _ __  _ __   ___ _ __
+| |\/| | | | | | |   |______|   | | | | / __\ \ /\ / / _` | '_ \| '_ \ / _ \ '__|
+| |  | \ \_/ /_| |_            _| |_| |/ /\__ \\ V  V / (_| | |_) | |_) |  __/ |
+\_|  |_/\___/ \___/            \___/|___/ |___/ \_/\_/ \__,_| .__/| .__/ \___|_|
+                                                            | |   | |
+                                                            |_|   |_|
+===================================================================================================
+""")
 
-print(f"Total Students Checked --> {total_checked}")
-print(f"Total Students Matched --> {total_matched}")
-print(f"Total NOT Found --> {len(not_found)}")
+    # Initialize logger
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "logging.ini")
+    logger = THElogger(script_name="MOI", config_file=config_path)
 
-print(f"Processing complete. Files saved in {moi_folder} folder.")
+    # Run MOI Swapper
+    swapper = MOISwapper(logger)
+    swapper.run()
+
+
+if __name__ == "__main__":
+    main()
