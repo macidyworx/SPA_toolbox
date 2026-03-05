@@ -4,10 +4,9 @@ import sys
 # Add project root to path so Helpers can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import pandas as pd
 import shutil
 import wx
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from xlrd import open_workbook
 from xlutils.copy import copy
 from Helpers.Clean_fields.clean_field import field_cleaner
@@ -34,7 +33,7 @@ class EOISwapper:
         self.total_matched = 0
         self.files_checked = []
         self.files_skipped = []
-        self.sif_df = None
+        self.sif_lookup = {}
 
     def run(self):
         """Main execution method."""
@@ -64,10 +63,15 @@ class EOISwapper:
                 self.logger.info("No output folder selected. Exiting.")
                 return
 
-            # Load SIF dataframe
-            self.sif_df = pd.read_excel(sif_path, header=1)  # Headers in row 2 (0-indexed as 1)
-            self.sif_df[SIF_FIRSTNAME] = self.sif_df[SIF_FIRSTNAME].apply(field_cleaner)
-            self.sif_df[SIF_SURNAME] = self.sif_df[SIF_SURNAME].apply(field_cleaner)
+            # Load SIF lookup dictionary
+            sif_wb = load_workbook(sif_path, read_only=True, data_only=True)
+            sif_ws = sif_wb.active
+            self.sif_lookup = {}
+            for row in sif_ws.iter_rows(min_row=3, values_only=True):
+                if row[3] and row[2] and row[4]:  # Firstname, Surname, StudentID
+                    key = (field_cleaner(str(row[3])), field_cleaner(str(row[2])))
+                    self.sif_lookup[key] = row[4]
+            sif_wb.close()
             self.logger.info(f"Loaded SIF file: {sif_path}")
 
             # Setup output folder
@@ -178,9 +182,8 @@ class EOISwapper:
                     self.total_checked += 1
                     file_checked += 1
                     # Find in SIF
-                    match = self.sif_df[(self.sif_df[SIF_FIRSTNAME] == fname) & (self.sif_df[SIF_SURNAME] == lname)]
-                    if not match.empty:
-                        new_id = match[SIF_STUDENTID].iloc[0]
+                    new_id = self.sif_lookup.get((fname, lname))
+                    if new_id is not None:
                         id_cell.value = new_id
                         self.total_matched += 1
                         file_matched += 1
@@ -200,7 +203,7 @@ class EOISwapper:
                                         year = parts[2].split()[0]
                         self.not_found.append({'File': file, 'Row': row, 'Fname': fname, 'Lname': lname, 'Year': year})
                         file_not_found += 1
-                        self.logger.info(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
+                        self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
 
             # Save to EOIswapped
             output_path = os.path.join(output_subfolder, os.path.basename(file))
@@ -272,9 +275,8 @@ class EOISwapper:
                     self.total_checked += 1
                     file_checked += 1
                     # Find in SIF
-                    match = self.sif_df[(self.sif_df[SIF_FIRSTNAME] == fname) & (self.sif_df[SIF_SURNAME] == lname)]
-                    if not match.empty:
-                        new_id = match[SIF_STUDENTID].iloc[0]
+                    new_id = self.sif_lookup.get((fname, lname))
+                    if new_id is not None:
                         ws.write(row_idx, id_col, new_id)
                         self.total_matched += 1
                         file_matched += 1
@@ -303,7 +305,7 @@ class EOISwapper:
                                             year = parts[2].split()[0]
                         self.not_found.append({'File': file, 'Row': row_idx + 1, 'Fname': fname, 'Lname': lname, 'Year': year})
                         file_not_found += 1
-                        self.logger.info(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
+                        self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
 
             # Save to EOIswapped
             output_path = os.path.join(output_subfolder, os.path.basename(file))
@@ -329,30 +331,30 @@ class EOISwapper:
         if not self.not_found and not self.files_checked and not self.files_skipped:
             return
 
-        # Create summary data
-        summary_data = [
-            {'Metric': 'Total Files Processed', 'Value': len(self.files_checked)},
-            {'Metric': 'Total Matched', 'Value': self.total_matched},
-            {'Metric': 'Total NOT Matched', 'Value': len(self.not_found)},
-            {'Metric': 'Note', 'Value': 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'},
-        ]
-        summary_df = pd.DataFrame(summary_data)
+        report_wb = Workbook()
+        summary_ws = report_wb.active
+        summary_ws.title = 'Summary'
+        summary_ws.append(['Metric', 'Value'])
+        summary_ws.append(['Total Files Processed', len(self.files_checked)])
+        summary_ws.append(['Total Matched', self.total_matched])
+        summary_ws.append(['Total NOT Matched', len(self.not_found)])
+        summary_ws.append(['Note', 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'])
+        summary_ws.append([])
+        summary_ws.append(['Files Checked', 'Files Skipped'])
+        for i in range(max(len(self.files_checked), len(self.files_skipped))):
+            checked = self.files_checked[i] if i < len(self.files_checked) else ''
+            skipped = self.files_skipped[i] if i < len(self.files_skipped) else ''
+            summary_ws.append([checked, skipped])
 
-        not_found_df = pd.DataFrame(self.not_found)
+        if self.not_found:
+            nf_ws = report_wb.create_sheet('Full List')
+            nf_ws.append(list(self.not_found[0].keys()))
+            for entry in self.not_found:
+                nf_ws.append(list(entry.values()))
 
-        with pd.ExcelWriter(os.path.join(output_subfolder, "EOI_report.xlsx")) as writer:
-            summary_df.to_excel(writer, sheet_name='Summary', index=False)
-            not_found_df.to_excel(writer, sheet_name='Full List', index=False)
-
-            # Add files lists to Summary sheet
-            sheet = writer.sheets['Summary']
-            sheet.cell(row=7, column=1).value = "Files Checked"
-            for i, file in enumerate(self.files_checked, start=8):
-                sheet.cell(row=i, column=1).value = file
-
-            sheet.cell(row=7, column=2).value = "Files Skipped"
-            for i, file in enumerate(self.files_skipped, start=8):
-                sheet.cell(row=i, column=2).value = file
+        report_path = os.path.join(output_subfolder, "EOI_report.xlsx")
+        report_wb.save(report_path)
+        report_wb.close()
 
 
 def main():

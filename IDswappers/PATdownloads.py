@@ -4,10 +4,9 @@ import sys
 # Add project root to path so Helpers can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import pandas as pd
 import shutil
 import wx
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from xlrd import open_workbook
 from xlutils.copy import copy
 from Helpers.Clean_fields.clean_field import field_cleaner
@@ -70,10 +69,15 @@ class PATSwapper:
 
         self.logger.info(f"Using values: SIF={sif_path}, Output={output_dir}")
 
-        # Load SIF dataframe
-        sif_df = pd.read_excel(sif_path, header=1)
-        sif_df[SIF_FIRSTNAME] = sif_df[SIF_FIRSTNAME].apply(field_cleaner)
-        sif_df[SIF_SURNAME] = sif_df[SIF_SURNAME].apply(field_cleaner)
+        # Load SIF lookup dictionary
+        sif_wb = load_workbook(sif_path, read_only=True, data_only=True)
+        sif_ws = sif_wb.active
+        sif_lookup = {}
+        for row in sif_ws.iter_rows(min_row=3, values_only=True):
+            if row[3] and row[2] and row[4]:  # Firstname, Surname, StudentID
+                key = (field_cleaner(str(row[3])), field_cleaner(str(row[2])))
+                sif_lookup[key] = row[4]
+        sif_wb.close()
 
         # Filter files (remove temp files)
         files = [f for f in files if not os.path.basename(f).startswith('~$') and os.path.isfile(f)]
@@ -147,9 +151,8 @@ class PATSwapper:
                         total_checked += 1
                         file_checked += 1
                         # Find in SIF
-                        match = sif_df[(sif_df[SIF_FIRSTNAME] == fname) & (sif_df[SIF_SURNAME] == lname)]
-                        if not match.empty:
-                            new_id = match[SIF_STUDENTID].iloc[0]
+                        new_id = sif_lookup.get((fname, lname))
+                        if new_id is not None:
                             id_cell.value = new_id
                             total_matched += 1
                             file_matched += 1
@@ -169,7 +172,7 @@ class PATSwapper:
                                             year = parts[2].split()[0]
                             not_found.append({'File': file, 'Row': row, 'Fname': fname, 'Lname': lname, 'Year': year})
                             file_not_found += 1
-                            self.logger.info(f"NOT FOUND in SIF: {fname} {lname}")
+                            self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
 
                 # Save to PATswapped
                 output_path = os.path.join(pat_folder, os.path.basename(file))
@@ -231,9 +234,8 @@ class PATSwapper:
                         total_checked += 1
                         file_checked += 1
                         # Find in SIF
-                        match = sif_df[(sif_df[SIF_FIRSTNAME] == fname) & (sif_df[SIF_SURNAME] == lname)]
-                        if not match.empty:
-                            new_id = match[SIF_STUDENTID].iloc[0]
+                        new_id = sif_lookup.get((fname, lname))
+                        if new_id is not None:
                             ws.write(row_idx, id_col, new_id)
                             total_matched += 1
                             file_matched += 1
@@ -253,7 +255,7 @@ class PATSwapper:
                                             year = parts[2].split()[0]
                             not_found.append({'File': file, 'Row': row_idx + 1, 'Fname': fname, 'Lname': lname, 'Year': year})
                             file_not_found += 1
-                            self.logger.info(f"NOT FOUND in SIF: {fname} {lname}")
+                            self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
 
                 # Save to PATswapped
                 output_path = os.path.join(pat_folder, os.path.basename(file))
@@ -276,33 +278,39 @@ class PATSwapper:
 
         # Save not found log
         if not_found:
-            log_df = pd.DataFrame(not_found)
-            log_df.to_excel(os.path.join(pat_folder, "not_found_log.xlsx"), index=False)
+            log_wb = Workbook()
+            log_ws = log_wb.active
+            log_ws.append(list(not_found[0].keys()))
+            for entry in not_found:
+                log_ws.append(list(entry.values()))
+            log_wb.save(os.path.join(pat_folder, "not_found_log.xlsx"))
+            log_wb.close()
 
         # Save report
         if not_found or files_checked or files_skipped:
-            summary_data = [
-                {'Metric': 'Total Files Processed', 'Value': len(files_checked)},
-                {'Metric': 'Total Matched', 'Value': total_matched},
-                {'Metric': 'Total NOT Matched', 'Value': len(not_found)},
-                {'Metric': 'Note', 'Value': 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'},
-            ]
-            summary_df = pd.DataFrame(summary_data)
+            report_wb = Workbook()
+            summary_ws = report_wb.active
+            summary_ws.title = 'Summary'
+            summary_ws.append(['Metric', 'Value'])
+            summary_ws.append(['Total Files Processed', len(files_checked)])
+            summary_ws.append(['Total Matched', total_matched])
+            summary_ws.append(['Total NOT Matched', len(not_found)])
+            summary_ws.append(['Note', 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'])
+            summary_ws.append([])
+            summary_ws.append(['Files Checked', 'Files Skipped'])
+            for i in range(max(len(files_checked), len(files_skipped))):
+                checked = files_checked[i] if i < len(files_checked) else ''
+                skipped = files_skipped[i] if i < len(files_skipped) else ''
+                summary_ws.append([checked, skipped])
 
-            not_found_df = pd.DataFrame(not_found)
+            if not_found:
+                nf_ws = report_wb.create_sheet('Full List')
+                nf_ws.append(list(not_found[0].keys()))
+                for entry in not_found:
+                    nf_ws.append(list(entry.values()))
 
-            with pd.ExcelWriter(os.path.join(pat_folder, "PAT_report.xlsx")) as writer:
-                summary_df.to_excel(writer, sheet_name='Summary', index=False)
-                not_found_df.to_excel(writer, sheet_name='Full List', index=False)
-
-                sheet = writer.sheets['Summary']
-                sheet.cell(row=7, column=1).value = "Files Checked"
-                for i, file in enumerate(files_checked, start=8):
-                    sheet.cell(row=i, column=1).value = file
-
-                sheet.cell(row=7, column=2).value = "Files Skipped"
-                for i, file in enumerate(files_skipped, start=8):
-                    sheet.cell(row=i, column=2).value = file
+            report_wb.save(os.path.join(pat_folder, "PAT_report.xlsx"))
+            report_wb.close()
 
         self.logger.info(f"Total Students Checked --> {total_checked}")
         self.logger.info(f"Total Students Matched --> {total_matched}")
