@@ -1,5 +1,6 @@
 .venv/
 
 __pycache__/
+logs/
 logs/PATdownloads_log.txt
 logs/PATdownloads_Report.xlsx
