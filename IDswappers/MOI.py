@@ -8,10 +8,11 @@ import shutil
 import wx
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, PatternFill
+from openpyxl.utils import column_index_from_string
 from xlrd import open_workbook
 from xlutils.copy import copy
 from Helpers.Clean_fields.clean_field import field_cleaner
-from Helpers.dog_box import select_sif, select_work_files, select_output_folder
+from Helpers.dog_box import select_single_file, select_work_files, select_output_folder
 from water_logged.the_logger import THElogger
 
 # Global constants for headers
@@ -34,7 +35,9 @@ class MOISwapper:
     def __init__(self, logger):
         """Initialize MOI Swapper with logger."""
         self.logger = logger
+        self.mode = None
         self.sif_lookup = None
+        self.ssot_lookup = {}
         self.moi_folder = None
         self.skipped_folder = None
         self.not_found = []
@@ -47,11 +50,18 @@ class MOISwapper:
         """Execute the MOI swapping process."""
         try:
             # Step 1: Get user inputs using dog_box helpers
-            sif_path = select_sif()
-            if sif_path is None:
-                self.logger.info("User cancelled SIF selection.")
+            lookup_result = select_single_file(mode="choose")
+            if not lookup_result:
+                self.logger.info("User cancelled file selection.")
                 self.logger.finalize_report()
                 return
+
+            if isinstance(lookup_result, str):
+                self.mode = "sif"
+                sif_path = lookup_result
+            else:
+                self.mode = "ssot"
+                ssot_info = lookup_result
 
             files = select_work_files([".xlsx", ".xls", ".xlsm"])
             if not files:
@@ -68,7 +78,8 @@ class MOISwapper:
                 self.logger.finalize_report()
                 return
 
-            self.logger.info(f"Using values: SIF={sif_path}, Files={len(files)}, Output={output_dir}")
+            lookup_path = sif_path if self.mode == "sif" else ssot_info['path']
+            self.logger.info(f"Using values: Mode={self.mode.upper()}, Lookup={lookup_path}, Files={len(files)}, Output={output_dir}")
 
             # Step 2: Setup output folder
             output_subfolder = os.path.join(output_dir, "MOIswapped")
@@ -89,17 +100,31 @@ class MOISwapper:
             self.skipped_folder = os.path.join(self.moi_folder, "SKIPPED")
             os.makedirs(self.skipped_folder, exist_ok=True)
 
-            # Step 3: Load SIF lookup
-            sif_wb = load_workbook(sif_path, read_only=True, data_only=True)
-            sif_ws = sif_wb.active
-            self.sif_lookup = {}
-            for row in sif_ws.iter_rows(min_row=3, values_only=True):
-                if row[3] and row[2] and row[4]:  # Firstname, Surname, StudentID
-                    fname = field_cleaner(str(row[3]))
-                    lname = field_cleaner(str(row[2]))
-                    key = (fname, lname)
-                    self.sif_lookup[key] = row[4]
-            sif_wb.close()
+            # Step 3: Load lookup (SIF or SSOT)
+            if self.mode == "sif":
+                sif_wb = load_workbook(sif_path, read_only=True, data_only=True)
+                sif_ws = sif_wb.active
+                self.sif_lookup = {}
+                for row in sif_ws.iter_rows(min_row=3, values_only=True):
+                    if row[3] and row[2] and row[4]:  # Firstname, Surname, StudentID
+                        fname = field_cleaner(str(row[3]))
+                        lname = field_cleaner(str(row[2]))
+                        key = (fname, lname)
+                        self.sif_lookup[key] = row[4]
+                sif_wb.close()
+            else:
+                ssot_wb = load_workbook(ssot_info['path'], read_only=True, data_only=True)
+                ssot_ws = ssot_wb.active
+                hr = ssot_info['header_row']
+                old_col = column_index_from_string(ssot_info['old_id_col'])
+                new_col = column_index_from_string(ssot_info['new_id_col'])
+                for row in ssot_ws.iter_rows(min_row=hr + 1):
+                    old_val = row[old_col - 1].value
+                    new_val = row[new_col - 1].value
+                    if old_val and new_val:
+                        self.ssot_lookup[field_cleaner(str(old_val))] = new_val
+                ssot_wb.close()
+                self.logger.info(f"Loaded {len(self.ssot_lookup)} ID mappings from SSOT")
 
             self.logger.info(f"Total files to process: {len(files)}")
 
@@ -184,47 +209,64 @@ class MOISwapper:
 
         # Process each student row
         for row in range(header_row + 1, ws.max_row + 1):
-            name_cell = ws[f"{student_col}{row}"]
             id_cell = ws[f"{id_col}{row}"]
-            name = name_cell.value
-            if name and isinstance(name, str):
-                self.total_checked += 1
-                file_checked += 1
-                # Parse name: "Brown, Florence" -> Lname=Brown, Fname=Florence
-                if ", " in name:
-                    lname, fname = name.split(", ", 1)
-                    fname = field_cleaner(fname)
-                    lname = field_cleaner(lname)
-                else:
-                    # If not in expected format, skip or handle
-                    self.logger.info(f"Warning: Name format not recognized in {file} row {row}: {name}")
-                    continue
 
-                # Get date for year
-                date_value = ws[f"{date_col}{row}"].value if date_col else None
-                year = None
-                if date_value:
-                    date_str = str(date_value)
-                    if '/' in date_str:
-                        year = date_str.split('/')[-1].split()[0]
-                    elif '-' in date_str:
-                        parts = date_str.split('-')
-                        if len(parts) >= 3:
-                            if len(parts[0]) == 4:  # yyyy-mm-dd format
-                                year = parts[0]
-                            else:  # dd-mm-yyyy format
-                                year = parts[2].split()[0]
+            if self.mode == "sif":
+                name_cell = ws[f"{student_col}{row}"]
+                name = name_cell.value
+                if name and isinstance(name, str):
+                    self.total_checked += 1
+                    file_checked += 1
+                    # Parse name: "Brown, Florence" -> Lname=Brown, Fname=Florence
+                    if ", " in name:
+                        lname, fname = name.split(", ", 1)
+                        fname = field_cleaner(fname)
+                        lname = field_cleaner(lname)
+                    else:
+                        # If not in expected format, skip or handle
+                        self.logger.info(f"Warning: Name format not recognized in {file} row {row}: {name}")
+                        continue
 
-                # Find in SIF
-                new_id = self.sif_lookup.get((fname, lname))
-                if new_id is not None:
-                    id_cell.value = new_id
-                    self.total_matched += 1
-                    file_matched += 1
-                else:
-                    self.not_found.append({'File': file, 'Row': row, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
-                    file_not_found += 1
-                    self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                    # Get date for year
+                    date_value = ws[f"{date_col}{row}"].value if date_col else None
+                    year = None
+                    if date_value:
+                        date_str = str(date_value)
+                        if '/' in date_str:
+                            year = date_str.split('/')[-1].split()[0]
+                        elif '-' in date_str:
+                            parts = date_str.split('-')
+                            if len(parts) >= 3:
+                                if len(parts[0]) == 4:  # yyyy-mm-dd format
+                                    year = parts[0]
+                                else:  # dd-mm-yyyy format
+                                    year = parts[2].split()[0]
+
+                    # Find in SIF
+                    new_id = self.sif_lookup.get((fname, lname))
+                    if new_id is not None:
+                        id_cell.value = new_id
+                        self.total_matched += 1
+                        file_matched += 1
+                    else:
+                        self.not_found.append({'File': file, 'Row': row, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
+                        file_not_found += 1
+                        self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+            else:  # ssot
+                old_id = id_cell.value
+                if old_id:
+                    self.total_checked += 1
+                    file_checked += 1
+                    cleaned_id = field_cleaner(str(old_id))
+                    new_id = self.ssot_lookup.get(cleaned_id)
+                    if new_id is not None:
+                        id_cell.value = new_id
+                        self.total_matched += 1
+                        file_matched += 1
+                    else:
+                        self.not_found.append({'File': file, 'Row': row, 'Old ID': str(old_id)})
+                        file_not_found += 1
+                        self.logger.debug(f"NOT FOUND in SSOT: {old_id}")
 
         # Save to MOIswapped
         output_path = os.path.join(self.moi_folder, os.path.basename(file))
@@ -276,55 +318,71 @@ class MOISwapper:
 
         # Process each student row
         for row_idx in range(header_row + 1, sheet.nrows):
-            name = sheet.cell_value(row_idx, student_col)
-            if name:
-                name = str(name).strip()
-                self.total_checked += 1
-                file_checked += 1
-                # Parse name: "Brown, Florence" -> Lname=Brown, Fname=Florence
-                if ", " in name:
-                    lname, fname = name.split(", ", 1)
-                    fname = field_cleaner(fname)
-                    lname = field_cleaner(lname)
-                else:
-                    # If not in expected format, skip or handle
-                    self.logger.info(f"Warning: Name format not recognized in {file} row {row_idx + 1}: {name}")
-                    continue
-
-                # Get date for year
-                date_value = sheet.cell_value(row_idx, date_col) if date_col is not None else None
-                year = None
-                if date_value:
-                    if isinstance(date_value, float):
-                        # xlrd returns dates as floats
-                        import xlrd
-                        try:
-                            date_tuple = xlrd.xldate_as_tuple(date_value, rb.datemode)
-                            year = str(date_tuple[0])  # Year is first element
-                        except:
-                            year = None
+            if self.mode == "sif":
+                name = sheet.cell_value(row_idx, student_col)
+                if name:
+                    name = str(name).strip()
+                    self.total_checked += 1
+                    file_checked += 1
+                    # Parse name: "Brown, Florence" -> Lname=Brown, Fname=Florence
+                    if ", " in name:
+                        lname, fname = name.split(", ", 1)
+                        fname = field_cleaner(fname)
+                        lname = field_cleaner(lname)
                     else:
-                        date_str = str(date_value)
-                        if '/' in date_str:
-                            year = date_str.split('/')[-1].split()[0]
-                        elif '-' in date_str:
-                            parts = date_str.split('-')
-                            if len(parts) >= 3:
-                                if len(parts[0]) == 4:  # yyyy-mm-dd format
-                                    year = parts[0]
-                                else:  # dd-mm-yyyy format
-                                    year = parts[2].split()[0]
+                        # If not in expected format, skip or handle
+                        self.logger.info(f"Warning: Name format not recognized in {file} row {row_idx + 1}: {name}")
+                        continue
 
-                # Find in SIF
-                new_id = self.sif_lookup.get((fname, lname))
-                if new_id is not None:
-                    ws.write(row_idx, id_col, new_id)
-                    self.total_matched += 1
-                    file_matched += 1
-                else:
-                    self.not_found.append({'File': file, 'Row': row_idx + 1, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
-                    file_not_found += 1
-                    self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                    # Get date for year
+                    date_value = sheet.cell_value(row_idx, date_col) if date_col is not None else None
+                    year = None
+                    if date_value:
+                        if isinstance(date_value, float):
+                            # xlrd returns dates as floats
+                            import xlrd
+                            try:
+                                date_tuple = xlrd.xldate_as_tuple(date_value, rb.datemode)
+                                year = str(date_tuple[0])  # Year is first element
+                            except:
+                                year = None
+                        else:
+                            date_str = str(date_value)
+                            if '/' in date_str:
+                                year = date_str.split('/')[-1].split()[0]
+                            elif '-' in date_str:
+                                parts = date_str.split('-')
+                                if len(parts) >= 3:
+                                    if len(parts[0]) == 4:  # yyyy-mm-dd format
+                                        year = parts[0]
+                                    else:  # dd-mm-yyyy format
+                                        year = parts[2].split()[0]
+
+                    # Find in SIF
+                    new_id = self.sif_lookup.get((fname, lname))
+                    if new_id is not None:
+                        ws.write(row_idx, id_col, new_id)
+                        self.total_matched += 1
+                        file_matched += 1
+                    else:
+                        self.not_found.append({'File': file, 'Row': row_idx + 1, 'Name': name, 'Fname': fname, 'Lname': lname, 'Year': year})
+                        file_not_found += 1
+                        self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+            else:  # ssot
+                old_id = sheet.cell_value(row_idx, id_col)
+                if old_id:
+                    self.total_checked += 1
+                    file_checked += 1
+                    cleaned_id = field_cleaner(str(old_id))
+                    new_id = self.ssot_lookup.get(cleaned_id)
+                    if new_id is not None:
+                        ws.write(row_idx, id_col, new_id)
+                        self.total_matched += 1
+                        file_matched += 1
+                    else:
+                        self.not_found.append({'File': file, 'Row': row_idx + 1, 'Old ID': str(old_id)})
+                        file_not_found += 1
+                        self.logger.debug(f"NOT FOUND in SSOT: {old_id}")
 
         # Save to MOIswapped
         output_path = os.path.join(self.moi_folder, os.path.basename(file))

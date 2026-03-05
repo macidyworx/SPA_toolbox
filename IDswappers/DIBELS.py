@@ -7,10 +7,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import shutil
 import wx
 from openpyxl import load_workbook, Workbook
+from openpyxl.utils import column_index_from_string
 from xlrd import open_workbook
 from xlutils.copy import copy
 from Helpers.Clean_fields.clean_field import field_cleaner
-from Helpers.dog_box import select_sif, select_work_files, select_output_folder
+from Helpers.dog_box import select_single_file, select_work_files, select_output_folder
 from water_logged.the_logger import THElogger
 
 # Global constants for headers
@@ -25,15 +26,15 @@ SIF_STUDENTID = "StudentID"
 
 class DIBELSSwapper:
     """
-    Processes DIBELS 8th Edition Excel files and swaps student IDs based on a SIF.
+    Processes DIBELS 8th Edition Excel files and swaps student IDs based on SIF or SSOT.
 
     Steps:
-    1. Prompts for working files (.xls/.xlsx)
-    2. Prompts for SIF file
+    1. Prompts for SIF or SSOT lookup file
+    2. Prompts for working files (.xls/.xlsx)
     3. Prompts for output directory
-    4. Loads SIF into DataFrame
+    4. Loads SIF or SSOT into lookup dict
     5. Processes each file and sheet
-    6. Replaces Student IDs with SIF matches
+    6. Replaces Student IDs with SIF/SSOT matches
     7. Saves modified files to DIBELSswapped folder
     8. Saves report with details
     """
@@ -46,6 +47,8 @@ class DIBELSSwapper:
         self.dibels_folder = None
         self.skipped_folder = None
         self.sif_lookup = None
+        self.mode = None
+        self.ssot_lookup = {}
         self.not_found = []
         self.total_checked = 0
         self.total_matched = 0
@@ -56,12 +59,18 @@ class DIBELSSwapper:
         """Main execution method."""
         try:
             # Get user inputs using dog_box helpers
-            sif_path_result = select_sif()
-            if sif_path_result is None:
-                self.logger.info("User cancelled SIF selection.")
+            lookup_result = select_single_file(mode="choose")
+            if not lookup_result:
+                self.logger.info("User cancelled file selection.")
                 self.logger.finalize_report()
                 return
-            self.sif_path = sif_path_result
+
+            if isinstance(lookup_result, str):
+                self.mode = "sif"
+                self.sif_path = lookup_result
+            else:
+                self.mode = "ssot"
+                ssot_info = lookup_result
 
             work_files = select_work_files([".xlsx", ".xls"])
             if not work_files:
@@ -83,7 +92,33 @@ class DIBELSSwapper:
                 return
             self.output_dir = output_dir_result
 
-            self.logger.info(f"Using SIF: {self.sif_path}")
+            # Load lookup data based on mode
+            if self.mode == "sif":
+                sif_wb = load_workbook(self.sif_path, read_only=True, data_only=True)
+                sif_ws = sif_wb.active
+                self.sif_lookup = {}
+                for row in sif_ws.iter_rows(min_row=3, values_only=True):  # data starts row 3, headers row 2
+                    if row[3] and row[2] and row[4]:  # Firstname=D(idx3), Surname=C(idx2), StudentID=E(idx4)
+                        key = (field_cleaner(str(row[3])), field_cleaner(str(row[2])))
+                        self.sif_lookup[key] = row[4]
+                sif_wb.close()
+                self.logger.info(f"Using SIF: {self.sif_path}")
+                self.logger.info(f"Loaded {len(self.sif_lookup)} students from SIF")
+            else:
+                ssot_wb = load_workbook(ssot_info['path'], read_only=True, data_only=True)
+                ssot_ws = ssot_wb.active
+                hr = ssot_info['header_row']
+                old_col = column_index_from_string(ssot_info['old_id_col'])
+                new_col = column_index_from_string(ssot_info['new_id_col'])
+                for row in ssot_ws.iter_rows(min_row=hr + 1):
+                    old_val = row[old_col - 1].value
+                    new_val = row[new_col - 1].value
+                    if old_val and new_val:
+                        self.ssot_lookup[field_cleaner(str(old_val))] = new_val
+                ssot_wb.close()
+                self.logger.info(f"Using SSOT: {ssot_info['path']}")
+                self.logger.info(f"Loaded {len(self.ssot_lookup)} ID mappings from SSOT")
+
             self.logger.info(f"Processing {len(files)} file(s)")
             self.logger.info(f"Output directory: {self.output_dir}")
 
@@ -104,18 +139,6 @@ class DIBELSSwapper:
 
             self.skipped_folder = os.path.join(self.dibels_folder, "SKIPPED")
             os.makedirs(self.skipped_folder, exist_ok=True)
-
-            # Load SIF into a lookup dict: (cleaned_firstname, cleaned_surname) -> student_id
-            sif_wb = load_workbook(self.sif_path, read_only=True, data_only=True)
-            sif_ws = sif_wb.active
-            self.sif_lookup = {}
-            for row in sif_ws.iter_rows(min_row=3, values_only=True):  # data starts row 3, headers row 2
-                if row[3] and row[2] and row[4]:  # Firstname=D(idx3), Surname=C(idx2), StudentID=E(idx4)
-                    key = (field_cleaner(str(row[3])), field_cleaner(str(row[2])))
-                    self.sif_lookup[key] = row[4]
-            sif_wb.close()
-
-            self.logger.info(f"Loaded {len(self.sif_lookup)} students from SIF")
 
             # Process each file
             file_count = 0
@@ -197,29 +220,46 @@ class DIBELSSwapper:
 
             # Process each student row
             for row in range(header_row + 1, ws.max_row + 1):
-                fname_cell = ws[f"{fname_col}{row}"]
-                lname_cell = ws[f"{lname_col}{row}"]
                 id_cell = ws[f"{id_col}{row}"]
-                fname = fname_cell.value
-                lname = lname_cell.value
-                if fname and lname and isinstance(fname, str) and isinstance(lname, str):
-                    fname = field_cleaner(fname)
-                    lname = field_cleaner(lname)
-                    self.total_checked += 1
-                    file_checked += 1
 
-                    # Find in SIF
-                    new_id = self.sif_lookup.get((fname, lname))
-                    if new_id is not None:
-                        id_cell.value = new_id
-                        self.total_matched += 1
-                        file_matched += 1
-                    else:
-                        date_value = ws[f"{date_col}{row}"].value if date_col else None
-                        year = self._extract_year(date_value)
-                        self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row, 'Fname': fname, 'Lname': lname, 'Year': year})
-                        file_not_found += 1
-                        self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                if self.mode == "sif":
+                    fname_cell = ws[f"{fname_col}{row}"]
+                    lname_cell = ws[f"{lname_col}{row}"]
+                    fname = fname_cell.value
+                    lname = lname_cell.value
+                    if fname and lname and isinstance(fname, str) and isinstance(lname, str):
+                        fname = field_cleaner(fname)
+                        lname = field_cleaner(lname)
+                        self.total_checked += 1
+                        file_checked += 1
+
+                        # Find in SIF
+                        new_id = self.sif_lookup.get((fname, lname))
+                        if new_id is not None:
+                            id_cell.value = new_id
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            date_value = ws[f"{date_col}{row}"].value if date_col else None
+                            year = self._extract_year(date_value)
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row, 'Fname': fname, 'Lname': lname, 'Year': year})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                else:  # ssot
+                    old_id = id_cell.value
+                    if old_id:
+                        self.total_checked += 1
+                        file_checked += 1
+                        cleaned_id = field_cleaner(str(old_id))
+                        new_id = self.ssot_lookup.get(cleaned_id)
+                        if new_id is not None:
+                            id_cell.value = new_id
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row, 'Old ID': str(old_id)})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SSOT: {old_id}")
 
         if sheets_processed > 0:
             # Save to DIBELSswapped
@@ -286,26 +326,42 @@ class DIBELSSwapper:
 
             # Process each student row
             for row_idx in range(header_row + 1, sheet.nrows):
-                fname = sheet.cell_value(row_idx, fname_col)
-                lname = sheet.cell_value(row_idx, lname_col)
-                if fname and lname:
-                    fname = field_cleaner(fname)
-                    lname = field_cleaner(lname)
-                    self.total_checked += 1
-                    file_checked += 1
+                if self.mode == "sif":
+                    fname = sheet.cell_value(row_idx, fname_col)
+                    lname = sheet.cell_value(row_idx, lname_col)
+                    if fname and lname:
+                        fname = field_cleaner(fname)
+                        lname = field_cleaner(lname)
+                        self.total_checked += 1
+                        file_checked += 1
 
-                    # Find in SIF
-                    new_id = self.sif_lookup.get((fname, lname))
-                    if new_id is not None:
-                        ws.write(row_idx, id_col, new_id)
-                        self.total_matched += 1
-                        file_matched += 1
-                    else:
-                        date_value = sheet.cell_value(row_idx, date_col) if date_col is not None else None
-                        year = self._extract_year(date_value)
-                        self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row_idx + 1, 'Fname': fname, 'Lname': lname, 'Year': year})
-                        file_not_found += 1
-                        self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                        # Find in SIF
+                        new_id = self.sif_lookup.get((fname, lname))
+                        if new_id is not None:
+                            ws.write(row_idx, id_col, new_id)
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            date_value = sheet.cell_value(row_idx, date_col) if date_col is not None else None
+                            year = self._extract_year(date_value)
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row_idx + 1, 'Fname': fname, 'Lname': lname, 'Year': year})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                else:  # ssot
+                    old_id = sheet.cell_value(row_idx, id_col)
+                    if old_id:
+                        self.total_checked += 1
+                        file_checked += 1
+                        cleaned_id = field_cleaner(str(old_id))
+                        new_id = self.ssot_lookup.get(cleaned_id)
+                        if new_id is not None:
+                            ws.write(row_idx, id_col, new_id)
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row_idx + 1, 'Old ID': str(old_id)})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SSOT: {old_id}")
 
         if sheets_processed > 0:
             # Save to DIBELSswapped
