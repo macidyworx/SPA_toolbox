@@ -32,13 +32,14 @@ field_cleaner("  Hello   World  ", strip_spaces=False)  # -> "hello world"
 
 ## Options
 
-| Parameter | Default | Description |
-|---|---|---|
-| `lowercase` | `True` | Convert text to lowercase |
-| `collapse_whitespace` | `True` | Collapse multiple spaces into one (ignored when `strip_spaces=True`) |
-| `strip_spaces` | `True` | Remove all spaces — useful for matching names like "Van Owen" vs "Vanowen" |
-| `strip_bom` | `True` | Remove BOM (Byte Order Mark) characters |
-| `unicode_form` | `'NFKC'` | Unicode normalization form (e.g. `'NFKC'`, `'NFC'`) |
+| Parameter             | Default  | Description                                                                |
+|-----------------------|----------|----------------------------------------------------------------------------|
+| `lowercase`           | `True`   | Convert text to lowercase                                                  |
+| `collapse_whitespace` | `True`   | Collapse multiple spaces into one (ignored when `strip_spaces=True`)       |
+| `strip_spaces`        | `True`   | Remove all spaces — useful for matching names like "Van Owen" vs "Vanowen" |
+| `strip_bom`           | `True`   | Remove BOM (Byte Order Mark) characters                                    |
+| `unicode_form`        | `'NFKC'` | Unicode normalization form (e.g. `'NFKC'`, `'NFC'`)                        |
+
 
 ## Testing
 
