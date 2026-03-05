@@ -1,0 +1,8 @@
+[INFO] - 2026-02-23 22:41:22 - User selected 7 file(s)
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-13052024-140853.xlsx
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-13052024-140853-SS.xlsx
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-13052024-140911.xlsx
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-13052024-140911-SS.xlsx
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-15122022-100452.xlsx
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-15122022-100452-SS.xlsx
+[INFO] - 2026-02-23 22:41:22 - Selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-15122022-100525.xlsx

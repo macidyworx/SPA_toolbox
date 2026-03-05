@@ -1,0 +1,23 @@
+[INFO] - 2026-02-23 22:49:07 - User selected file: C:\Users\paddy\Desktop\SPA-working-files\St Aug\2Swap\PAT EY Maths\pat-early-years-maths-end-year-1-13052024-140853-SS.xlsx
+
+E_E_E_E____ERROR__ERROR___E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_
+E_E_E_E_
+E_E_E_E_ Selected file is invalid:
+E_E_E_E_ Missing required headers: ['Surname', 'Firstname', 'StudentID']
+E_E_E_E_
+E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_
+
+[INFO] - 2026-02-23 22:50:11 - User cancelled SSOT file selection.
+[INFO] - 2026-02-23 22:52:04 - User selected file: D:\Repos\SPAhub\SPAhub_repo\dog_box\testing_files\SIF_Stock.xlsx
+
+E_E_E_E____ERROR__ERROR___E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_
+E_E_E_E_
+E_E_E_E_ Selected file is invalid:
+E_E_E_E_ Missing required headers: ['Surname', 'Firstname', 'StudentID']
+E_E_E_E_
+E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_
+
+[INFO] - 2026-02-23 23:04:30 - User selected file: D:\Repos\SPAhub\SPAhub_repo\dog_box\testing_files\SIF_Stock.xlsx
+[INFO] - 2026-02-23 23:04:30 - Header validation succeeded.
+[INFO] - 2026-02-23 23:23:00 - User selected file: D:\Repos\SPAhub\SPAhub_repo\dog_box\testing_files\SIF_Stock.xlsx
+[INFO] - 2026-02-23 23:23:00 - Header validation succeeded.
