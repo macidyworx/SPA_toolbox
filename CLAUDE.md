@@ -162,7 +162,7 @@ This allows:
 
 ## Ignore
 
-Do not read or reference anything in the `ZZHISTORY/` folder.
+Do not read or reference anything in the `ZZHISTORY/` or `zzNOTES/` folder.
 
 ## Task Workflow
 
