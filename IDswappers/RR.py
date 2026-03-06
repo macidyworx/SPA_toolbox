@@ -1,8 +1,8 @@
 """
 RR.py - ID Swapper for Running Records (RR) Excel files.
 
-RR files have 3 tabs. Only Text_Level_1_to_30 and Text_Level_A_to_Z contain
-student IDs to swap. Column headers: Surname, First_Name, Student_ID.
+RR files contain multiple tabs. Text_Level_1_to_30, Text_Level_A_to_Z, and PM 2
+contain student IDs to swap. Column headers: Surname, First_Name, Student_ID.
 
 Can be run standalone or imported as a module.
 """
@@ -32,7 +32,7 @@ SIF_FIRSTNAME = "Firstname"
 SIF_STUDENTID = "StudentID"
 
 # Tabs to process
-TARGET_SHEETS = ["Text_Level_1_to_30", "Text_Level_A_to_Z"]
+TARGET_SHEETS = ["Text_Level_1_to_30", "Text_Level_A_to_Z", "PM 2"]
 
 
 class RRSwapper:
