@@ -266,9 +266,7 @@ class DIBELSSwapper:
             output_path = os.path.join(self.dibels_folder, os.path.basename(file))
             try:
                 wb.save(output_path)
-                self.logger.info(f"Students Checked: {file_checked}")
-                self.logger.info(f"Students Matched: {file_matched}")
-                self.logger.info(f"Students NOT Found: {file_not_found}")
+                self.logger.info(f"File totals: Checked={file_checked}, Matched={file_matched}, Not Found={file_not_found}")
                 self.files_checked.append(os.path.basename(file))
             except Exception as e:
                 self.logger.error(f"Error saving {output_path}: {e}")
@@ -368,9 +366,7 @@ class DIBELSSwapper:
             output_path = os.path.join(self.dibels_folder, os.path.basename(file))
             try:
                 wb.save(output_path)
-                self.logger.info(f"Students Checked: {file_checked}")
-                self.logger.info(f"Students Matched: {file_matched}")
-                self.logger.info(f"Students NOT Found: {file_not_found}")
+                self.logger.info(f"File totals: Checked={file_checked}, Matched={file_matched}, Not Found={file_not_found}")
                 self.files_checked.append(os.path.basename(file))
             except Exception as e:
                 self.logger.error(f"Error saving {output_path}: {e}")

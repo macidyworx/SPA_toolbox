@@ -555,7 +555,7 @@ class SSSRSwapper:
 
             total_checked += file_checked
             total_matched += file_matched
-            self.logger.info(f"Checked={file_checked}, Matched={file_matched}, Not Found={file_not_found}")
+            self.logger.info(f"File totals: Checked={file_checked}, Matched={file_matched}, Not Found={file_not_found}")
 
         # Save not found log
         if not_found:
