@@ -22,8 +22,24 @@ Helpers/
     ssotsif.py           # select_sif(), select_ssot(), select_single_file()
     work_files.py        # select_work_files()
     tests/
-      test_ssotsif.py
-      test_work_files.py
+
+Finders/
+  File_sorter/             # Automatic file sorting by test type
+    file_sorter.py         # FileSorter class — main sorting engine
+    file_identifier.py     # identify_file() — YAML-driven file type matching
+    config_loader.py       # load_test_configs() — YAML loader with validation
+    path_resolver.py       # resolve_sort_path() — sort strategy templates
+    unique_path.py         # get_unique_path() — duplicate filename handling
+    file_cache.py          # FileCache — hash+mtime identification cache
+    cell_utils.py          # parse_cell_ref() — A1 notation parser
+    readers/               # Format-specific file readers
+      xlsx_reader.py       # XlsxReader (openpyxl)
+      xlsm_reader.py       # XlsmReader (openpyxl)
+      xls_reader.py        # XlsReader (xlrd)
+      csv_reader.py        # CsvReader (stdlib csv)
+    test_configs/
+      test_identifiers.yaml  # 45 test type definitions
+    tests/
 ```
 
 ## Using the Helpers
@@ -75,6 +91,31 @@ ssot = select_ssot()  # returns dict with path, header_row, old_id_col, new_id_c
 files = select_work_files([".xlsx", ".xls"])
 ```
 
+### File_sorter — Automatic file sorting by test type
+
+```python
+from Finders.File_sorter import FileSorter, identify_file, load_test_configs
+
+# Sort all files in a folder (uses bundled YAML config)
+sorter = FileSorter()
+summary = sorter.sort_files("input_folder/", "SORTED/")
+# summary["sorted"]       -> {"PAT R 5th OL": 3, "SSSR": 1, ...}
+# summary["unidentified"] -> ["unknown_file.xlsx", ...]
+
+# With callbacks (for GUI integration)
+sorter = FileSorter(
+    message_callback=my_log_func,
+    progress_callback=lambda current, total, name: True,  # return False to cancel
+)
+
+# Identify a single file
+configs = load_test_configs()
+name, config = identify_file("student_data.xlsx", configs)
+
+# Standalone
+# python -m Finders.File_sorter.file_sorter <input_folder> <output_folder>
+```
+
 ## Commands
 
 **Always activate the project virtual environment (`.venv`) before running commands.**
@@ -97,6 +138,7 @@ When tests need to be run, use these commands:
 .venv/bin/pytest Helpers/Clean_fields/test_clean_fields.py -v
 .venv/bin/pytest Helpers/Last_row_finder/test_last_row.py -v
 .venv/bin/pytest Helpers/dog_box/tests/ -v
+.venv/bin/pytest Finders/File_sorter/tests/ -v
 ```
 
 ## Coding Standards

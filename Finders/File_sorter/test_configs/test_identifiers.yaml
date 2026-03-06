@@ -1,0 +1,1205 @@
+PAT-R Adapt TAGed:
+  priority: 1
+  folder: PAT-R Adapt TAGed
+  group: PAT
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: patrx
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: patrx
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: patrx
+  csv:
+    KEYS:
+    - startswith: patrx
+      cell: A1
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT-M Adapt TAGed:
+  priority: 2
+  folder: PAT-M Adapt TAGed
+  group: PAT
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: patmx
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: patmx
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: patmx
+  csv:
+    KEYS:
+    - startswith: patmx
+      cell: A1
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT-M 4th OL:
+  priority: 3
+  folder: PAT-M 4th OL
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat maths 4th edition
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat maths 4th edition
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat maths 4th edition
+  csv:
+    KEYS:
+    - startswith: pat maths 4th edition
+      cell: A1
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT-R ONLINE:
+  priority: 4
+  folder: PAT-R_ONLINE
+  group: PAR-R
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat-r comprehension
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat-r comprehension
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat-r comprehension
+  csv:
+    KEYS:
+    - startswith: pat-r comprehension
+      cell: A1
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT R 5th OL:
+  priority: 5
+  folder: PAT R 5th OL
+  group: PAT
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat reading 5th edition
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat reading 5th edition
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat reading 5th edition
+  csv:
+    KEYS:
+    - startswith: pat reading 5th edition
+      cell: A1
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT EY Reading:
+  priority: 6
+  folder: PAT EY Reading
+  group: PAT
+  area: Reading
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: a1
+      sheet: 0
+      startswith: pat early years reading
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat early years reading
+  csv:
+    KEYS:
+    - startswith: pat early years reading
+      cell: A1
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT-R Adapt noTAG:
+  priority: 7
+  folder: PAT-R Adapt noTAG
+  group: PAT
+  area: Reading
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: Test
+    - sheet: 0
+      startswith: Date
+    - sheet: 0
+      startswith: PAT Reading Adaptive
+  xls:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: Test
+    - sheet: 0
+      startswith: Date
+    - sheet: 0
+      startswith: PAT Reading Adaptive
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT-M Adapt noTAG:
+  priority: 8
+  folder: PAT-M Adapt noTAG
+  group: PAT
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: Test
+    - sheet: 0
+      startswith: Date
+    - sheet: 0
+      startswith: PAT Maths Adaptive
+  xls:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: Test
+    - sheet: 0
+      startswith: Date
+    - sheet: 0
+      startswith: PAT Maths Adaptive
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT EY Maths:
+  priority: 9
+  folder: PAT EY Maths
+  group: PAT
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: a1
+      sheet: 0
+      startswith: pat early years maths
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: pat early years maths
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/SINGLEsheet.py
+  SURNAME_HEADER: Family name
+  FIRSTNAME_HEADER: Given name
+  ID_HEADER: Unique ID
+PAT-M 3rd Book TP:
+  priority: 10
+  folder: PAT-M 3rd Book TP
+  group: PAT
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: pat-maths / i can do maths
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: pat-maths / i can do maths
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: pat-maths / i can do maths
+  csv:
+    KEYS:
+    - startswith: pat-maths / i can do maths
+      cell: B2
+      sheet: 0
+PAT-R 4th Book TP:
+  priority: 11
+  folder: PAT-R 4th Book TP
+  group: PAT
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: pat-r comprehesion fourth edition scoring templates
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: pat-r comprehesion fourth edition scoring templates
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: pat-r comprehesion fourth edition scoring templates
+PAT-M 4th Book TP:
+  priority: 12
+  folder: PAT-M 4th Book TP
+  group: PAT
+  area: Math
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: pat-maths 4th edition
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: pat-maths 4th edition
+TEACHER JUDGMENTS:
+  priority: 13
+  folder: TEACHER_JUDGMENTS
+  group: TJ
+  area: All
+  variant: ''
+  sort_strategy: '{folder}'
+  xml:
+    KEYS:
+    - tag: CASES21_message
+RUNNING RECORDS:
+  priority: 14
+  folder: RUNNING RECORDS
+  group: RUNNING RECORDS
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: running record
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: running record
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: running record
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/MULITsheet.py
+  SURNAME_HEADER: Surname
+  FIRSTNAME_HEADER: First_Name
+  ID_HEADER: Student_ID
+OB_SURVEY:
+  priority: 15
+  folder: OB_SURVEY
+  group: OB_SURVEY
+  area: Reading
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: marie clay
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: marie clay
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: marie clay
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/MULITsheet.py
+  SURNAME_HEADER: Surname
+  FIRSTNAME_HEADER: First_Name
+  ID_HEADER: Student ID
+SWST:
+  priority: 16
+  folder: SWST
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: B2
+      contains:
+      - single word spelling test
+      - scoring templates
+      sheet: 0
+  xlsm:
+    KEYS:
+    - cell: B2
+      contains:
+      - single word spelling test
+      - scoring templates
+      sheet: 0
+  xlsx:
+    KEYS:
+    - cell: B2
+      contains:
+      - single word spelling test
+      - scoring templates
+      sheet: 0
+SAST:
+  priority: 17
+  folder: SAST
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: B2
+      contains:
+      - south australian spelling test
+      - second edition
+      - scoring templates
+      sheet: 0
+  xlsm:
+    KEYS:
+    - cell: B2
+      contains:
+      - south australian spelling test
+      - second edition
+      - scoring templates
+      sheet: 0
+  xlsx:
+    KEYS:
+    - cell: B2
+      contains:
+      - south australian spelling test
+      - second edition
+      - scoring templates
+      sheet: 0
+VCOP-bigwrite:
+  priority: 18
+  folder: VCOP-bigwrite
+  group: VCOP-bigwrite
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: warm & cold write data tracker
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: warm & cold write data tracker
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: warm & cold write data tracker
+DIBELS:
+  priority: 19
+  folder: DIBELS
+  group: DIBELS
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: dibels 8th ed.
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: dibels 8th ed.
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: dibels 8th ed.
+  csv:
+    KEYS:
+    - startswith: dibels 8th ed.
+      cell: B2
+      sheet: 0
+  SWAPPER_FILE: tool_box/IDswappers/Swapper_modules/MULITsheet.py
+  SURNAME_HEADER: Surname
+  FIRSTNAME_HEADER: First Name
+  ID_HEADER: Student ID
+Magic Words:
+  priority: 20
+  folder: MAGIC_WORDS
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: magic words
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: magic words
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: magic words
+Acadience Reading:
+  priority: 21
+  folder: Acadience Reading
+  group: Acadience
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: acadience reading (2021) k-6 assessment
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: acadience reading (2021) k-6 assessment
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: acadience reading (2021) k-6 assessment
+General Spelling:
+  priority: 22
+  folder: General_Spelling
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: general spelling age test
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: general spelling age test
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: general spelling age test
+Mathematics Online Interview - Insight:
+  priority: 23
+  folder: MOL
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  csv:
+    KEYS:
+    - startswith: mathematics online interview
+      cell: A1
+      sheet: 0
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: mathematics online interview
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: mathematics online interview
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: mathematics online interview
+Essential Assessment _3sets:
+  priority: 24
+  folder: Essential Assessment
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  csv:
+    KEYS:
+    - startswith: firstname
+      cell: A1
+      sheet: 0
+    - startswith: surname
+      cell: B1
+      sheet: 0
+    - startswith: studentnumber
+      cell: C1
+      sheet: 0
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: firstname
+    - cell: B1
+      sheet: 0
+      startswith: surname
+    - cell: C1
+      sheet: 0
+      startswith: studentnumber
+  xlsm:
+    KEYS:
+    - cell: a1
+      sheet: 0
+      startswith: firstname
+    - cell: b1
+      sheet: 0
+      startswith: surname
+    - cell: c1
+      sheet: 0
+      startswith: studentnumber
+  xlsx:
+    KEYS:
+    - cell: a1
+      sheet: 0
+      startswith: firstname
+    - cell: b1
+      sheet: 0
+      startswith: surname
+    - cell: c1
+      sheet: 0
+      startswith: studentnumber
+EOI Insight:
+  priority: 25
+  folder: EOI Insight
+  group: EOI
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: 'english online interview
+
+        insight platform template'
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: 'english online interview
+
+        insight platform template'
+NAPLAN SSSR:
+  priority: 26
+  folder: NAPLAN SSSR
+  group: NAPLAN
+  area: All
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: sssr
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: sssr
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: sssr
+  csv:
+    KEYS:
+    - startswith: sssr
+      cell: A1
+      sheet: 0
+NAPLAN Outcome:
+  priority: 27
+  folder: NAPLAN Outcome
+  group: NAPLAN
+  area: All
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: aps year
+    - sheet: 0
+      cell: b1
+      startswith: reporting test
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: aps year
+    - sheet: 0
+      cell: b1
+      startswith: reporting test
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: aps year
+    - sheet: 0
+      cell: B1
+      startswith: reporting test
+  csv:
+    KEYS:
+    - startswith: aps year
+      cell: A1
+      sheet: 0
+    - startswith: reporting test
+      cell: B1
+      sheet: 0
+Acadience Math:
+  priority: 28
+  folder: Acadience Math
+  group: Acadience
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: acadience math
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: acadience math
+Early Years Numeracy Interview:
+  priority: 29
+  folder: Early Years Numeracy Interview
+  group: MOI
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: early years numeracy interview
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: early years numeracy interview
+HSC:
+  priority: 30
+  folder: HSC
+  group: HSC
+  area: ALL
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: c1
+      startswith: coursename
+    - sheet: 0
+      cell: d1
+      startswith: measure names
+    - sheet: 0
+      cell: g1
+      startswith: skcalendaryear
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: C1
+      startswith: coursename
+    - sheet: 0
+      cell: D1
+      startswith: measure names
+    - sheet: 0
+      cell: G1
+      startswith: skcalendaryear
+OnDemand:
+  priority: 31
+  folder: OnDemand
+  group: OnDemand
+  area: ALL
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: i1
+      startswith: standard level 1
+    - sheet: 0
+      cell: j1
+      startswith: standard level 2
+    - sheet: 0
+      cell: k1
+      startswith: standard level 3
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: I1
+      startswith: standard level 1
+    - sheet: 0
+      cell: J1
+      startswith: standard level 2
+    - sheet: 0
+      cell: K1
+      startswith: standard level 3
+TJ Template:
+  priority: 32
+  folder: TJ Template
+  group: TJ
+  area: ALL
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: h2
+      startswith: curriculumtype
+    - sheet: 0
+      cell: i1
+      startswith: learning area
+    - sheet: 0
+      cell: j1
+      startswith: learning area code
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: H2
+      startswith: curriculumtype
+    - sheet: 0
+      cell: I1
+      startswith: learning area
+    - sheet: 0
+      cell: J1
+      startswith: learning area code
+Westwood Maths:
+  priority: 33
+  folder: Westwood Maths
+  group: Westwood
+  area: Maths
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: westwood maths
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: westwood maths
+General Reading:
+  priority: 34
+  folder: General_Reading
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: general reading age test
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: general reading age test
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: general reading age test
+Moderated Writing:
+  priority: 35
+  folder: Moderated Writing
+  group: Moderated Writing
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: h1
+      startswith: writing test name
+    - sheet: 0
+      cell: i1
+      startswith: term 1 task
+    - sheet: 0
+      cell: l1
+      startswith: term 2 task
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: H1
+      startswith: writing test name
+    - sheet: 0
+      cell: I1
+      startswith: term 1 task
+    - sheet: 0
+      cell: L1
+      startswith: term 2 task
+AGAT:
+  priority: 36
+  folder: AGAT
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: agat
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: agat
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: agat
+ROL:
+  priority: 37
+  folder: ROL
+  group: ROL
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: record of oral language
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: record of oral language
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: record of oral language
+TORCH 2nd:
+  priority: 38
+  folder: TORCH 2nd
+  group: TORCH
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: torch & torchplus second edition first edition scoring templates
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: torch & torchplus second edition first edition scoring templates
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: torch & torchplus second edition first edition scoring templates
+TORCH 3rd:
+  priority: 39
+  folder: TORCH 3rd
+  group: TORCH
+  area: English
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: b2
+      startswith: torch third edition scoring templates
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: B2
+      startswith: torch third edition scoring templates
+VCE_DATA:
+  priority: 40
+  folder: VCE DATA
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: study
+    - sheet: 0
+      cell: b1
+      startswith: year
+    - sheet: 0
+      cell: c1
+      startswith: cases_id
+    - sheet: 0
+      cell: f1
+      startswith: achieved
+  xlsm:
+    KEYS:
+    - sheet: 0
+      cell: a1
+      startswith: study
+    - sheet: 0
+      cell: b1
+      startswith: year
+    - sheet: 0
+      cell: c1
+      startswith: cases_id
+    - sheet: 0
+      cell: f1
+      startswith: achieved
+  xls:
+    KEYS:
+    - sheet: 0
+      cell: A1
+      startswith: study
+    - sheet: 0
+      cell: B1
+      startswith: year
+    - sheet: 0
+      cell: C1
+      startswith: cases_id
+    - sheet: 0
+      cell: F1
+      startswith: achieved
+  csv:
+    KEYS:
+    - startswith: study
+      cell: A1
+      sheet: 0
+    - startswith: year
+      cell: B1
+      sheet: 0
+    - startswith: cases_id
+      cell: C1
+      sheet: 0
+    - startswith: achieved
+      cell: F1
+      sheet: 0
+BY_SHEET_NAME:
+  priority: 41
+  folder: ZTEST_FILES
+  group: ''
+  area: ''
+  variant: ''
+  sort_strategy: '{folder}'
+  csv:
+    KEYS:
+    - startswith: by sheet name
+      cell: A1
+      sheet: 0
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: the sheet
+      startswith: by sheet name
+  xlsm:
+    KEYS:
+    - cell: a1
+      sheet: the sheet
+      startswith: by sheet name
+  xlsx:
+    KEYS:
+    - cell: a1
+      sheet: the sheet
+      startswith: by sheet name
+TWO_CELL_CHECK:
+  priority: 42
+  folder: ZTEST_FILES
+  group: ZTEST_FILES
+  area: ZTEST_FILES
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: xx
+    - cell: A2
+      sheet: 0
+      startswith: bb
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: xx
+    - cell: A2
+      sheet: 0
+      startswith: bb
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: xx
+    - cell: A2
+      sheet: 0
+      startswith: bb
+  csv:
+    KEYS:
+    - startswith: xx
+      cell: A1
+      sheet: 0
+    - startswith: bb
+      cell: A2
+      sheet: 0
+TEST_CELLA1_STARTSWITH:
+  priority: 43
+  folder: ZTEST_FILES
+  group: ZTEST_FILES
+  area: ZTEST_FILES
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: cell a1 test
+  xlsm:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: cell a1 test
+  xls:
+    KEYS:
+    - cell: A1
+      sheet: 0
+      startswith: cell a1 test
+  csv:
+    KEYS:
+    - startswith: cell a1 test
+      cell: A1
+      sheet: 0
+TEST_CELLB2_STARTSWITH:
+  priority: 44
+  folder: ZTEST_FILES
+  group: ZTEST_FILES
+  area: ZTEST_FILES
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: cell b2 test
+  xlsm:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: cell b2 test
+  xls:
+    KEYS:
+    - cell: B2
+      sheet: 0
+      startswith: cell b2 test
+  csv:
+    KEYS:
+    - startswith: cell b2 test
+      cell: B2
+      sheet: 0
+find_me:
+  priority: 45
+  folder: ZTEST_FILES
+  group: find_me
+  area: find_me
+  variant: ''
+  sort_strategy: '{folder}'
+  xlsx:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: find_me
+  xlsm:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: find_me
+  xls:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: find_me
+  csv:
+    FIND_KEYS:
+    - sheet: 0
+      startswith: find_me

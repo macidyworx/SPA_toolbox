@@ -1,0 +1,3 @@
+from Finders.File_sorter.file_sorter import FileSorter
+from Finders.File_sorter.file_identifier import identify_file
+from Finders.File_sorter.config_loader import load_test_configs
