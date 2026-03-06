@@ -7,7 +7,16 @@ and organizes them into corresponding output folder structures:
 - Only_UniqueID/ - has Family name + Given name + Unique ID (no Username)
 - [root] - has all four fields
 
-Can be run standalone or imported as a module.
+Can be run standalone (with progress window) or imported as a module.
+Supports progress callbacks for integration into other workflows.
+
+Example module usage with progress callback:
+    def my_progress_handler(idx, total, filename):
+        print(f"Processing: {idx}/{total} - {filename}")
+        return True  # continue processing
+
+    finder = PATonlineFinder()
+    finder.run(progress_callback=my_progress_handler)
 """
 
 # === IMPORTS ===
@@ -35,6 +44,70 @@ TARGET_HEADERS = {
 
 SCAN_COLUMNS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M']
 SCAN_ROWS = range(1, 21)
+
+
+# === PROGRESS DIALOG ===
+class ProgressDialog(wx.Dialog):
+    """Modal progress dialog with file counter, filename display, and cancel button."""
+
+    def __init__(self, total_files, parent=None):
+        """
+        Initialize progress dialog.
+
+        Args:
+            total_files (int): Total number of files to process
+            parent: Parent window (can be None for standalone mode)
+        """
+        super().__init__(parent, title="Processing PATonline Files", style=wx.DEFAULT_DIALOG_STYLE)
+        self.total_files = total_files
+        self._cancelled = False
+
+        # Layout
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Counter label
+        self.counter_label = wx.StaticText(self, label="File 0 of 0")
+        sizer.Add(self.counter_label, 0, wx.ALL | wx.EXPAND, 10)
+
+        # Filename label
+        self.filename_label = wx.StaticText(self, label="")
+        sizer.Add(self.filename_label, 0, wx.ALL | wx.EXPAND, 10)
+
+        # Progress bar
+        self.progress_bar = wx.Gauge(self, range=max(1, total_files))
+        sizer.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, 10)
+
+        # Cancel button
+        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
+        cancel_btn.Bind(wx.EVT_BUTTON, self.on_cancel)
+        sizer.Add(cancel_btn, 0, wx.ALL | wx.CENTER, 10)
+
+        self.SetSizer(sizer)
+        self.SetSize(400, 200)
+        self.Centre()
+
+    def update(self, current_index, filename):
+        """
+        Update progress display.
+
+        Args:
+            current_index (int): 1-based index of current file (1 to total_files)
+            filename (str): Basename of file being processed
+        """
+        self.counter_label.SetLabel(f"File {current_index} of {self.total_files}")
+        self.filename_label.SetLabel(f"Processing: {filename}")
+        self.progress_bar.SetValue(current_index)
+        self.Refresh()
+        wx.SafeYield()
+
+    def is_cancelled(self):
+        """Check if user clicked cancel button."""
+        return self._cancelled
+
+    def on_cancel(self, event):
+        """Handle cancel button click."""
+        self._cancelled = True
+        self.EndModal(wx.ID_CANCEL)
 
 
 # === HELPER FUNCTIONS ===
@@ -206,9 +279,26 @@ class PATonlineFinder:
             self.logger.warning(f"Failed to move {filename}: {e}")
             return False
 
-    def run(self):
-        """Main workflow: select files, output folder, and process."""
+    def run(self, progress_callback=None):
+        """
+        Main workflow: select files, output folder, and process.
+
+        Args:
+            progress_callback (callable, optional): Function called during file processing.
+                Signature: def callback(current_index, total_count, filename) -> bool
+                    current_index: 1-based index of current file (1 to total_count)
+                    total_count: Total number of files to process
+                    filename: Basename of file being processed
+                Returns: True to continue processing, False to cancel
+
+        Raises:
+            TypeError: If progress_callback is provided but not callable
+        """
         self.logger.info("PATonline-FINDER started")
+
+        # Validate callback parameter
+        if progress_callback is not None and not callable(progress_callback):
+            raise TypeError("progress_callback must be callable or None")
 
         # Prompt user for input files
         files = select_work_files([".xlsx", ".xls"])
@@ -228,7 +318,22 @@ class PATonlineFinder:
 
         # Process each file
         processed_count = 0
-        for file_path in files:
+        total_files = len(files)
+
+        for index, file_path in enumerate(files, start=1):
+            # Check for cancellation
+            try:
+                if progress_callback is not None:
+                    filename = os.path.basename(file_path)
+                    should_continue = progress_callback(index, total_files, filename)
+                    if not should_continue:
+                        self.logger.info(f"Processing cancelled by user after {processed_count} file(s) processed.")
+                        self.logger.finalize_report()
+                        return
+            except Exception as e:
+                self.logger.warning(f"Error in progress callback: {e}")
+                # Continue processing despite callback error
+
             if self.process_file(file_path, output_dir):
                 processed_count += 1
 
@@ -253,8 +358,45 @@ def main():
 
     app = wx.App(False)
     finder = PATonlineFinder()
-    finder.run()
+
+    # Create progress dialog and pass callback to run()
+    finder.run(progress_callback=_create_progress_callback())
+
     app.Destroy()
+
+
+def _create_progress_callback():
+    """
+    Create a progress callback that manages a wxPython progress dialog.
+
+    Returns:
+        Callable that creates and manages the progress dialog
+    """
+    progress_dialog = None
+
+    def progress_handler(current_index, total_count, filename):
+        """Handle progress updates and manage dialog lifecycle."""
+        nonlocal progress_dialog
+
+        # Create dialog on first call
+        if progress_dialog is None:
+            progress_dialog = ProgressDialog(total_count, parent=None)
+            progress_dialog.Show()
+
+        # Update dialog
+        progress_dialog.update(current_index, filename)
+
+        # Check for cancellation
+        if progress_dialog.is_cancelled():
+            # Clean up dialog
+            if progress_dialog:
+                progress_dialog.Destroy()
+                progress_dialog = None
+            return False  # Signal to cancel processing
+
+        return True  # Continue processing
+
+    return progress_handler
 
 
 if __name__ == "__main__":
