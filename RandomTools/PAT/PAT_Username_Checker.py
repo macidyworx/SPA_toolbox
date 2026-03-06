@@ -14,7 +14,7 @@ import shutil
 import sys
 import wx
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 # Add project root to path so Helpers can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -25,7 +25,12 @@ from openpyxl.utils import get_column_letter, column_index_from_string
 from Helpers.Clean_fields.clean_field import field_cleaner
 from Helpers.Last_row_finder.real_last_row import ws_last_row
 from Helpers.dog_box.work_files import select_work_files, select_output_folder
+from water_logged.the_logger import THElogger
 
+
+# === SCAN RANGE (matches PATonline_FINDER convention) ===
+SCAN_COLUMNS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M']
+SCAN_ROWS = range(1, 21)
 
 # === STATUS CODES ===
 STATUS_EXPECTED_ID = "EXPECTED_ID"
@@ -138,19 +143,27 @@ def select_format() -> Optional[str]:
 
 # === COLUMN DETECTION ===
 
-def detect_username_column(file_path: str) -> Optional[str]:
+def detect_username_column(file_path: str) -> Optional[tuple]:
     """
-    Auto-detect the username column by searching for common header variants.
+    Auto-detect the username column by scanning rows 1-20, columns A-M for header variants.
 
-    Search order: Username, User ID, ID, UserID (case-insensitive, whitespace-tolerant).
-    Uses field_cleaner for robust matching.
+    Searches for: Username, User ID, UserID (case-insensitive, whitespace-tolerant).
+    Uses field_cleaner for robust matching. Scans the same range as PATonline_FINDER.
 
     Args:
         file_path: Path to the Excel file to inspect.
 
     Returns:
-        Column letter (e.g., 'A', 'B') if found, None if not detected.
+        Tuple of (column_letter, header_row) if found, None if not detected.
     """
+    # Header variants to search for (readable format, normalized at match time)
+    SEARCH_HEADERS = {
+        "Username": "username",
+        "User ID": "userid",
+        "UserID": "userid",
+    }
+    normalized_search = {field_cleaner(k, strip_spaces=True): v for k, v in SEARCH_HEADERS.items()}
+
     try:
         wb = load_workbook(file_path, data_only=True)
         try:
@@ -158,23 +171,16 @@ def detect_username_column(file_path: str) -> Optional[str]:
             if ws is None:
                 return None
 
-            # Common header variants to search for
-            search_terms = ['username', 'user id', 'id', 'userid']
+            # Scan rows 1-20, columns A-M (matches PATonline_FINDER convention)
+            for row in SCAN_ROWS:
+                for col in SCAN_COLUMNS:
+                    cell = ws[f'{col}{row}']
+                    if cell.value is None:
+                        continue
 
-            # Iterate through first row to find header
-            for col_num in range(1, ws.max_column + 1):
-                cell = ws.cell(row=1, column=col_num)
-                if cell.value is None:
-                    continue
-
-                # Normalize header using field_cleaner (strip spaces, lowercase)
-                normalized_header = field_cleaner(str(cell.value), lowercase=True, strip_spaces=True)
-
-                # Check if it matches any of our search terms (also normalized)
-                for term in search_terms:
-                    normalized_term = field_cleaner(term, lowercase=True, strip_spaces=True)
-                    if normalized_header == normalized_term:
-                        return get_column_letter(col_num)
+                    cell_text = field_cleaner(str(cell.value), strip_spaces=True)
+                    if cell_text in normalized_search:
+                        return (col, row)
 
             return None
         finally:
@@ -202,6 +208,13 @@ class PAT_Username_Checker:
         self.output_folder = Path(output_folder)
         self.selected_format = selected_format
 
+        # Initialize logger
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(script_dir, "logging.ini")
+        if not os.path.exists(config_path):
+            config_path = os.path.join(os.path.dirname(os.path.dirname(script_dir)), "IDswappers", "logging.ini")
+        self.logger = THElogger(script_name="PAT_Username_Checker", config_file=config_path)
+
         # Map format to validator function
         self.validators = {
             'alphanumeric': validate_alphanumeric,
@@ -218,9 +231,6 @@ class PAT_Username_Checker:
             'errors': 0,
         }
 
-        # Log of operations
-        self.log = []
-
     def _ensure_output_structure(self) -> bool:
         """
         Create output subdirectories if they don't exist.
@@ -235,7 +245,7 @@ class PAT_Username_Checker:
                 path.mkdir(parents=True, exist_ok=True)
             return True
         except Exception as e:
-            self.log.append(f"ERROR: Failed to create output structure: {e}")
+            self.logger.warning(f"Failed to create output structure: {e}")
             return False
 
     def _get_unique_path(self, dest_path: Path) -> Path:
@@ -280,15 +290,18 @@ class PAT_Username_Checker:
                 if ws is None:
                     return STATUS_EMPTY_OR_UNREADABLE
 
-                # Auto-detect username column
-                username_col = detect_username_column(file_path)
-                if username_col is None:
-                    self.log.append(f"WARNING: Could not auto-detect username column in {file_path}")
+                # Auto-detect username column (returns (col_letter, header_row) or None)
+                result = detect_username_column(file_path)
+                if result is None:
+                    self.logger.warning(f"Could not auto-detect username column in {os.path.basename(file_path)}")
                     return STATUS_EMPTY_OR_UNREADABLE
+
+                username_col, header_row = result
+                self.logger.debug(f"Found username column '{username_col}' at row {header_row} in {os.path.basename(file_path)}")
 
                 # Find last row with data in username column
                 last_row = ws_last_row(ws, username_col)
-                if last_row is None or last_row < 2:
+                if last_row is None or last_row <= header_row:
                     # No data rows (header only or empty)
                     return STATUS_EMPTY_OR_UNREADABLE
 
@@ -297,11 +310,11 @@ class PAT_Username_Checker:
                 if validator is None:
                     return STATUS_EMPTY_OR_UNREADABLE
 
-                # Validate all values in the username column (rows 2 to last_row)
+                # Validate all values in the username column (data starts after header row)
                 all_match = True
                 col_num = column_index_from_string(username_col)
 
-                for row in range(2, last_row + 1):
+                for row in range(header_row + 1, last_row + 1):
                     cell = ws.cell(row=row, column=col_num)
                     if cell.value is None:
                         # Treat None as non-matching
@@ -318,7 +331,7 @@ class PAT_Username_Checker:
                 wb.close()
 
         except Exception as e:
-            self.log.append(f"ERROR: Exception while validating {file_path}: {e}")
+            self.logger.warning(f"Exception while validating {os.path.basename(file_path)}: {e}")
             return STATUS_EMPTY_OR_UNREADABLE
 
     def run(self, files: List[str]) -> dict:
@@ -336,8 +349,12 @@ class PAT_Username_Checker:
         if not self._ensure_output_structure():
             return self.stats
 
+        self.logger.info(f"PAT_Username_Checker started - Format: {self.selected_format}")
+        self.logger.info(f"Processing {len(files)} file(s) to {self.output_folder}")
+
         for file_path in files:
             self.stats['total_processed'] += 1
+            filename = Path(file_path).name
 
             try:
                 # Validate the file
@@ -355,17 +372,21 @@ class PAT_Username_Checker:
                     self.stats['empty_or_unreadable'] += 1
 
                 # Move file to destination
-                filename = Path(file_path).name
                 dest_path = dest_folder / filename
                 dest_path = self._get_unique_path(dest_path)
 
                 shutil.move(file_path, str(dest_path))
-                self.log.append(f"MOVED: {file_path} -> {dest_path}")
+                self.logger.info(f"Processed {filename}: Status={status}, Destination={dest_folder}")
 
             except Exception as e:
                 self.stats['errors'] += 1
-                self.log.append(f"ERROR: Failed to process {file_path}: {e}")
+                self.logger.warning(f"Failed to process {filename}: {e}")
 
+        self.logger.info(f"Processing complete. {self.stats['expected_id']} expected, "
+                         f"{self.stats['files_to_check']} to check, "
+                         f"{self.stats['empty_or_unreadable']} empty/unreadable, "
+                         f"{self.stats['errors']} errors.")
+        self.logger.finalize_report()
         return self.stats
 
 
@@ -413,11 +434,6 @@ def main():
     print(f"  - Empty or Unreadable: {stats['empty_or_unreadable']}")
     print(f"  - Errors: {stats['errors']}")
     print("="*60)
-
-    if checker.log:
-        print("\nOperations Log:")
-        for entry in checker.log:
-            print(f"  {entry}")
 
     app.Destroy()
 
