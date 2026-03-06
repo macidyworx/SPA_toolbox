@@ -1,62 +1,18 @@
 import os
-import pandas as pd
-import glob
-import shutil
 import sys
-sys.path.insert(0, '.')
-from openpyxl import load_workbook
+
+# Add project root to path so Helpers can be imported
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import shutil
+import wx
+from openpyxl import load_workbook, Workbook
+from openpyxl.utils import column_index_from_string
 from xlrd import open_workbook
 from xlutils.copy import copy
-from tool_box.Helpers.Clean_fields.clean_field import field_cleaner
-
-# Determine repo root for relative paths
-script_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.abspath(os.path.join(script_dir, '..', '..', '..'))
-
-TESTING = False
-TESTING_FILES_FOLDER = os.path.join(repo_root, 'ZZSample_Files', 'Test_Files', 'DIBELS')
-TESTING_SIF_PATH = os.path.join(repo_root, 'ZZSample_Files', 'SIF10Students.xlsx')
-TESTING_OUTPUT_FOLDER = os.path.join(repo_root, 'ZZSample_Files', 'TEST_outputs')
-
-"""
-===============================================================================
-DIBELS Swapper Script
-===============================================================================
-
-Description:
-This script processes DIBELS 8th Edition Excel files (.xls and .xlsx) in a specified folder and its
-subfolders, swaps student IDs based on a Student Information File (SIF), and
-saves modified copies to an output folder named 'DIBELSswapped'.
-
-The files may contain multiple sheets, and only sheets with the correct headers
-('First Name', 'Surname', 'Student ID') will be processed.
-
-Steps performed:
-1. Prompts the user for the input folder containing .xls/.xlsx files to process.
-2. Prompts for the location of the SIF Excel file (with headers in row 2).
-3. Prompts for the output directory where 'DIBELSswapped' will be created.
-4. Loads the SIF file into a DataFrame.
-5. Recursively finds all .xls/.xlsx files in the input folder.
-6. For each file:
-   - For each sheet in the workbook:
-     - Checks if the sheet has 'First Name', 'Surname', and 'Student ID' headers.
-     - If headers are found, processes the sheet by matching students against SIF.
-     - Replaces the Student ID with the SIF StudentID if found; logs to Excel if not.
-   - Prints progress to console.
-7. Saves modified files to the DIBELSswapped folder.
-8. Saves a report with processing details and not-found students as 'DIBELS_report.xlsx' in DIBELSswapped.
-
-Requirements:
-- Python with pandas, openpyxl installed.
-- SIF file must have columns: 'Surname', 'Firstname', 'StudentID'.
-- Input files must have sheets with 'First Name', 'Surname', and 'Student ID' headers.
-
-Usage:
-Run the script: python DIBELS.py
-Follow the prompts to enter paths.
-
-===============================================================================
-"""
+from Helpers.Clean_fields.clean_field import field_cleaner
+from Helpers.dog_box import select_single_file, select_work_files, select_output_folder
+from water_logged.the_logger import THElogger
 
 # Global constants for headers
 FILE_FNAME = "First Name"
@@ -68,164 +24,169 @@ SIF_FIRSTNAME = "Firstname"
 SIF_STUDENTID = "StudentID"
 
 
-print(r"""
-===================================================================================================
- _____ ___________ _____ _      _____                 
-|  _  \_   _| ___ \  ___| |    /  ___|                
-| | | | | | | |_/ / |__ | |    \ `--.   ______        
-| | | | | | | ___ \  __|| |     `--. \ |______|       
-| |/ / _| |_| |_/ / |___| |____/\__/ /                
-|___/  \___/\____/\____/\_____/\____/                 
-                                                      
-                                                      
-  ___________                                         
- |_   _|  _  \                                        
-   | | | | | |_____      ____ _ _ __  _ __   ___ _ __ 
-   | | | | | / __\ \ /\ / / _` | '_ \| '_ \ / _ \ '__|
-  _| |_| |/ /\__ \\ V  V / (_| | |_) | |_) |  __/ |   
-  \___/|___/ |___/ \_/\_/ \__,_| .__/| .__/ \___|_|   
-                               | |   | |              
-                               |_|   |_|              
-===================================================================================================
-""")
-def get_user_inputs():
-    example_folder = os.path.join(os.path.expanduser('~'), 'Desktop', 'SFDS', 'SORTED', 'PAT')
-    folder = input(f"Enter the folder location containing .xls and .xlsx files to swap (e.g., {example_folder}): ").strip('"').strip("'")
-    example_sif = os.path.join(os.path.expanduser('~'), 'Desktop', 'ZZZ2025SIF.xlsx')
-    sif_path = input(f"Enter the location of the SIF file (e.g., {example_sif}): ").strip('"').strip("'")
-    example_output = os.path.join(os.path.expanduser('~'), 'Desktop', 'SwappedSFDS')
-    output_dir = input(f"Enter the output directory where DIBELSswapped will be created (e.g., {example_output}): ").strip('"').strip("'")
-    return folder, sif_path, output_dir
+class DIBELSSwapper:
+    """
+    Processes DIBELS 8th Edition Excel files and swaps student IDs based on SIF or SSOT.
 
-if TESTING:
-    print(f"Using test values: Folder={TESTING_FILES_FOLDER}, SIF={TESTING_SIF_PATH}, Output={TESTING_OUTPUT_FOLDER}")
-    use_test = input("Do you want to continue using Test data or Enter actual data locations? Y or N: ").strip().upper()
-    if use_test == 'Y':
-        folder = TESTING_FILES_FOLDER
-        sif_path = TESTING_SIF_PATH
-        output_dir = TESTING_OUTPUT_FOLDER
-    else:
-        folder, sif_path, output_dir = get_user_inputs()
-else:
-    folder, sif_path, output_dir = get_user_inputs()
+    Steps:
+    1. Prompts for SIF or SSOT lookup file
+    2. Prompts for working files (.xls/.xlsx)
+    3. Prompts for output directory
+    4. Loads SIF or SSOT into lookup dict
+    5. Processes each file and sheet
+    6. Replaces Student IDs with SIF/SSOT matches
+    7. Saves modified files to DIBELSswapped folder
+    8. Saves report with details
+    """
 
-print(f"Using values: Folder={folder}, SIF={sif_path}, Output={output_dir}")
-dibels_folder = os.path.join(output_dir, "DIBELSswapped")
-while os.path.exists(dibels_folder):
-    print("")
-    print("===================================================================================================")
-    print(f"Error >> {dibels_folder} already exists.")
-    print("")
-    choice = input(f"Do you want to (r)emove it, (m)ove to a new location, or (q)uit? (r/m/q): ").lower().strip()
-    if choice == 'r':
-        shutil.rmtree(dibels_folder)
-        print(f"Removed {dibels_folder}.")
-    elif choice == 'm':
-        new_dir = input("Enter new output directory: ")
-        dibels_folder = os.path.join(new_dir, "DIBELSswapped")
-        print(f"Changed to {dibels_folder}.")
-    elif choice == 'q':
-        print("Exiting.")
-        exit()
-    else:
-        print("Invalid choice. Please enter r, m, or q.")
+    def __init__(self, logger):
+        self.logger = logger
+        self.folder = None
+        self.sif_path = None
+        self.output_dir = None
+        self.dibels_folder = None
+        self.skipped_folder = None
+        self.sif_lookup = None
+        self.mode = None
+        self.ssot_lookup = {}
+        self.not_found = []
+        self.total_checked = 0
+        self.total_matched = 0
+        self.files_checked = []
+        self.files_skipped = []
 
-# Check if parent directory exists
-parent_dir = os.path.dirname(dibels_folder)
-if not os.path.exists(parent_dir):
-    create = input(f"The directory '{parent_dir}' does not exist. Do you want to create it? (y/n): ").lower().strip()
-    if create == 'y':
-        os.makedirs(parent_dir, exist_ok=True)
-        print(f"Created directory: {parent_dir}")
-    else:
-        print("Please enter a different output directory.")
-        new_dir = input("Enter new output directory: ")
-        dibels_folder = os.path.join(new_dir, "DIBELSswapped")
-        print(f"Changed to {dibels_folder}.")
-        # Recheck the new location
-        while os.path.exists(dibels_folder):
-            print("")
-            print("===================================================================================================")
-            print(f"Error >> {dibels_folder} already exists.")
-            print("")
-            choice = input(f"Do you want to (r)emove it, (m)ove to a new location, or (q)uit? (r/m/q): ").lower().strip()
-            if choice == 'r':
-                shutil.rmtree(dibels_folder)
-                print(f"Removed {dibels_folder}.")
-            elif choice == 'm':
-                new_dir = input("Enter new output directory: ")
-                dibels_folder = os.path.join(new_dir, "DIBELSswapped")
-                print(f"Changed to {dibels_folder}.")
-            elif choice == 'q':
-                print("Exiting.")
-                exit()
+    def run(self):
+        """Main execution method."""
+        try:
+            # Get user inputs using dog_box helpers
+            lookup_result = select_single_file(mode="choose")
+            if not lookup_result:
+                self.logger.info("User cancelled file selection.")
+                self.logger.finalize_report()
+                return
+
+            if isinstance(lookup_result, str):
+                self.mode = "sif"
+                self.sif_path = lookup_result
             else:
-                print("Invalid choice. Please enter r, m, or q.")
-        # Now check parent again for the new location
-        parent_dir = os.path.dirname(dibels_folder)
-        if not os.path.exists(parent_dir):
-            create = input(f"The directory '{parent_dir}' does not exist. Do you want to create it? (y/n): ").lower().strip()
-            if create == 'y':
-                os.makedirs(parent_dir, exist_ok=True)
-                print(f"Created directory: {parent_dir}")
+                self.mode = "ssot"
+                ssot_info = lookup_result
+
+            work_files = select_work_files([".xlsx", ".xls"])
+            if not work_files:
+                self.logger.info("User cancelled file selection or no files selected.")
+                self.logger.finalize_report()
+                return
+
+            # Filter out temp files
+            files = [f for f in work_files if not os.path.basename(f).startswith('~$')]
+            if not files:
+                self.logger.info("No valid files found after filtering.")
+                self.logger.finalize_report()
+                return
+
+            output_dir_result = select_output_folder("Select output folder for DIBELS")
+            if output_dir_result is None:
+                self.logger.info("User cancelled output folder selection.")
+                self.logger.finalize_report()
+                return
+            self.output_dir = output_dir_result
+
+            # Load lookup data based on mode
+            if self.mode == "sif":
+                sif_wb = load_workbook(self.sif_path, read_only=True, data_only=True)
+                sif_ws = sif_wb.active
+                self.sif_lookup = {}
+                for row in sif_ws.iter_rows(min_row=3, values_only=True):  # data starts row 3, headers row 2
+                    if row[3] and row[2] and row[4]:  # Firstname=D(idx3), Surname=C(idx2), StudentID=E(idx4)
+                        key = (field_cleaner(str(row[3])), field_cleaner(str(row[2])))
+                        self.sif_lookup[key] = row[4]
+                sif_wb.close()
+                self.logger.info(f"Using SIF: {self.sif_path}")
+                self.logger.info(f"Loaded {len(self.sif_lookup)} students from SIF")
             else:
-                print("Exiting due to invalid directory.")
-                exit()
+                ssot_wb = load_workbook(ssot_info['path'], read_only=True, data_only=True)
+                ssot_ws = ssot_wb.active
+                hr = ssot_info['header_row']
+                old_col = column_index_from_string(ssot_info['old_id_col'])
+                new_col = column_index_from_string(ssot_info['new_id_col'])
+                for row in ssot_ws.iter_rows(min_row=hr + 1):
+                    old_val = row[old_col - 1].value
+                    new_val = row[new_col - 1].value
+                    if old_val and new_val:
+                        self.ssot_lookup[field_cleaner(str(old_val))] = new_val
+                ssot_wb.close()
+                self.logger.info(f"Using SSOT: {ssot_info['path']}")
+                self.logger.info(f"Loaded {len(self.ssot_lookup)} ID mappings from SSOT")
 
-os.mkdir(dibels_folder)
+            self.logger.info(f"Processing {len(files)} file(s)")
+            self.logger.info(f"Output directory: {self.output_dir}")
 
-skipped_folder = os.path.join(dibels_folder, "SKIPPED")
-os.makedirs(skipped_folder, exist_ok=True)
+            # Setup output folder
+            self.dibels_folder = os.path.join(self.output_dir, "DIBELSswapped")
+            if os.path.exists(self.dibels_folder):
+                result = wx.MessageBox(
+                    f"{self.dibels_folder} already exists.\nRemove it and continue?",
+                    "Output Folder Exists", wx.YES_NO | wx.ICON_WARNING)
+                if result == wx.YES:
+                    shutil.rmtree(self.dibels_folder)
+                else:
+                    self.logger.info("User cancelled due to existing output folder.")
+                    self.logger.finalize_report()
+                    return
 
-# Step 4: Load SIF dataframe
-sif_df = pd.read_excel(sif_path, header=1)  # Headers in row 2 (0-indexed as 1)
-sif_df[SIF_FIRSTNAME] = sif_df[SIF_FIRSTNAME].apply(field_cleaner)
-sif_df[SIF_SURNAME] = sif_df[SIF_SURNAME].apply(field_cleaner)
+            os.mkdir(self.dibels_folder)
 
-# Get all files (including in subfolders) or single file
-if os.path.isfile(folder):
-    files = [folder]
-else:
-    files = glob.glob(os.path.join(folder, "**", "*"), recursive=True)
-    # Filter out temporary Excel files and directories
-    files = [f for f in files if not os.path.basename(f).startswith('~$') and os.path.isfile(f)]
+            self.skipped_folder = os.path.join(self.dibels_folder, "SKIPPED")
+            os.makedirs(self.skipped_folder, exist_ok=True)
 
-print(f"Total files to process: {len(files)}")
+            # Process each file
+            file_count = 0
+            for file in files:
+                file_count += 1
+                self.logger.info(f"Processing file {file_count}/{len(files)} > {file}")
+                self._process_file(file)
 
-# List to log not found students
-not_found = []
+            # Save report
+            self._save_report()
 
-# Counters
-total_checked = 0
-total_matched = 0
+            self.logger.info(f"Total Students Checked: {self.total_checked}")
+            self.logger.info(f"Total Students Matched: {self.total_matched}")
+            self.logger.info(f"Total NOT Found: {len(self.not_found)}")
+            self.logger.info(f"Processing complete. Files saved in {self.dibels_folder} folder.")
 
-# Track files
-files_checked = []
-files_skipped = []
+        except Exception as e:
+            self.logger.error(f"Error during processing: {e}")
+        finally:
+            self.logger.finalize_report()
 
-# Step 4-7: Process each file
-file_count = 0
-for file in files:
-    file_count += 1
-    print(f"Processing file {file_count}/{len(files)} > {file}")
-    
-    # Per-file counters
-    file_checked = 0
-    file_matched = 0
-    file_not_found = 0
-    processed_any = False
-    
-    if '.xlsx' in file.lower():
+    def _process_file(self, file):
+        """Process a single file (.xlsx or .xls)."""
+        file_checked = 0
+        file_matched = 0
+        file_not_found = 0
+
+        if '.xlsx' in file.lower():
+            self._process_xlsx(file)
+        elif '.xls' in file.lower():
+            self._process_xls(file)
+        else:
+            self.logger.info(f"Unsupported file format: {file}. Skipping.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
+
+    def _process_xlsx(self, file):
+        """Process an .xlsx file."""
         wb = load_workbook(file)
-        
-        # Process each sheet
+
         sheets_processed = 0
         for sheet_name in wb.sheetnames:
             if sheet_name == "Main Menu":
-                print(f"Skipping sheet: {sheet_name}")
+                self.logger.info(f"Skipping sheet: {sheet_name}")
                 continue
+
             ws = wb[sheet_name]
-            
+
             # Find header row and columns
             header_row = None
             fname_col = None
@@ -247,89 +208,90 @@ for file in files:
                     break
 
             if not fname_col or not lname_col or not id_col:
-                print(f"Sheet '{sheet_name}' in {file} does not have required headers. Skipping.")
+                self.logger.info(f"Sheet '{sheet_name}' in {file} does not have required headers. Skipping.")
                 continue
 
             sheets_processed += 1
-            print(f"Processing sheet: {sheet_name}")
+            self.logger.info(f"Processing sheet: {sheet_name}")
+
+            file_checked = 0
+            file_matched = 0
+            file_not_found = 0
 
             # Process each student row
             for row in range(header_row + 1, ws.max_row + 1):
-                fname_cell = ws[f"{fname_col}{row}"]
-                lname_cell = ws[f"{lname_col}{row}"]
                 id_cell = ws[f"{id_col}{row}"]
-                fname = fname_cell.value
-                lname = lname_cell.value
-                if fname and lname and isinstance(fname, str) and isinstance(lname, str):
-                    fname = field_cleaner(fname)
-                    lname = field_cleaner(lname)
-                    #print(f"Checking student: {fname} {lname}")
-                    total_checked += 1
-                    file_checked += 1
-                    # Find in SIF
-                    match = sif_df[(sif_df[SIF_FIRSTNAME] == fname) & (sif_df[SIF_SURNAME] == lname)]
-                    if not match.empty:
-                        new_id = match[SIF_STUDENTID].iloc[0]
-                        id_cell.value = new_id
-                        total_matched += 1
-                        file_matched += 1
-                        #print("Found")
-                    else:
-                        date_value = ws[f"{date_col}{row}"].value if date_col else None
-                        year = None
-                        if date_value:
-                            date_str = str(date_value)
-                            if '/' in date_str:
-                                year = date_str.split('/')[-1].split()[0]
-                            elif '-' in date_str:
-                                parts = date_str.split('-')
-                                if len(parts) >= 3:
-                                    if len(parts[0]) == 4:  # yyyy-mm-dd format
-                                        year = parts[0]
-                                    else:  # dd-mm-yyyy format
-                                        year = parts[2].split()[0]
-                        not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row, 'Fname': fname, 'Lname': lname, 'Year': year})
-                        file_not_found += 1
-                        print(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
+
+                if self.mode == "sif":
+                    fname_cell = ws[f"{fname_col}{row}"]
+                    lname_cell = ws[f"{lname_col}{row}"]
+                    fname = fname_cell.value
+                    lname = lname_cell.value
+                    if fname and lname and isinstance(fname, str) and isinstance(lname, str):
+                        fname = field_cleaner(fname)
+                        lname = field_cleaner(lname)
+                        self.total_checked += 1
+                        file_checked += 1
+
+                        # Find in SIF
+                        new_id = self.sif_lookup.get((fname, lname))
+                        if new_id is not None:
+                            id_cell.value = new_id
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            date_value = ws[f"{date_col}{row}"].value if date_col else None
+                            year = self._extract_year(date_value)
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row, 'Fname': fname, 'Lname': lname, 'Year': year})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                else:  # ssot
+                    old_id = id_cell.value
+                    if old_id:
+                        self.total_checked += 1
+                        file_checked += 1
+                        cleaned_id = field_cleaner(str(old_id))
+                        new_id = self.ssot_lookup.get(cleaned_id)
+                        if new_id is not None:
+                            id_cell.value = new_id
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row, 'Old ID': str(old_id)})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SSOT: {old_id}")
 
         if sheets_processed > 0:
             # Save to DIBELSswapped
-            output_path = os.path.join(dibels_folder, os.path.basename(file))
+            output_path = os.path.join(self.dibels_folder, os.path.basename(file))
             try:
                 wb.save(output_path)
+                self.logger.info(f"Students Checked: {file_checked}")
+                self.logger.info(f"Students Matched: {file_matched}")
+                self.logger.info(f"Students NOT Found: {file_not_found}")
+                self.files_checked.append(os.path.basename(file))
             except Exception as e:
-                print(f"Error saving {output_path}: {e}")
-                input("Please close the file in Excel and press Enter to retry.")
-                try:
-                    wb.save(output_path)
-                except Exception as e2:
-                    print(f"Failed again: {e2}. Skipping save for {file}.")
-            print(f"Students Checked: {file_checked}")
-            print(f"Students Matched: {file_matched}")
-            print(f"Students NOT Found: {file_not_found}")
+                self.logger.error(f"Error saving {output_path}: {e}")
         else:
-            print(f"No valid sheets found in {file}. Skipping file.")
+            self.logger.info(f"No valid sheets found in {file}. Skipping file.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
 
-        if sheets_processed > 0:
-            files_checked.append(os.path.basename(file))
-        else:
-            files_skipped.append(os.path.basename(file))
-            shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
-
-    elif '.xls' in file.lower():
+    def _process_xls(self, file):
+        """Process an .xls file."""
         rb = open_workbook(file, formatting_info=True)
         wb = copy(rb)
-        
-        # Process each sheet
+
         sheets_processed = 0
         for sheet_idx in range(rb.nsheets):
             sheet_name = rb.sheet_names()[sheet_idx]
             if sheet_name == "Main Menu":
-                print(f"Skipping sheet: {sheet_name}")
+                self.logger.info(f"Skipping sheet: {sheet_name}")
                 continue
+
             sheet = rb.sheet_by_index(sheet_idx)
             ws = wb.get_sheet(sheet_idx)
-            
+
             # Find header row and columns (0-based indices)
             header_row = None
             fname_col = None
@@ -352,106 +314,151 @@ for file in files:
                     break
 
             if fname_col is None or lname_col is None or id_col is None:
-                print(f"Sheet '{sheet_name}' in {file} does not have required headers. Skipping.")
+                self.logger.info(f"Sheet '{sheet_name}' in {file} does not have required headers. Skipping.")
                 continue
 
             sheets_processed += 1
-            print(f"Processing sheet: {sheet_name}")
+            self.logger.info(f"Processing sheet: {sheet_name}")
+
+            file_checked = 0
+            file_matched = 0
+            file_not_found = 0
 
             # Process each student row
             for row_idx in range(header_row + 1, sheet.nrows):
-                fname = sheet.cell_value(row_idx, fname_col)
-                lname = sheet.cell_value(row_idx, lname_col)
-                if fname and lname:
-                    fname = field_cleaner(fname)
-                    lname = field_cleaner(lname)
-                    #print(f"Checking student: {fname} {lname}")
-                    total_checked += 1
-                    file_checked += 1
-                    # Find in SIF
-                    match = sif_df[(sif_df[SIF_FIRSTNAME] == fname) & (sif_df[SIF_SURNAME] == lname)]
-                    if not match.empty:
-                        new_id = match[SIF_STUDENTID].iloc[0]
-                        ws.write(row_idx, id_col, new_id)
-                        total_matched += 1
-                        file_matched += 1
-                        #print("Found")
-                    else:
-                        date_value = sheet.cell_value(row_idx, date_col) if date_col is not None else None
-                        year = None
-                        if date_value:
-                            date_str = str(date_value)
-                            if '/' in date_str:
-                                year = date_str.split('/')[-1].split()[0]
-                            elif '-' in date_str:
-                                parts = date_str.split('-')
-                                if len(parts) >= 3:
-                                    if len(parts[0]) == 4:  # yyyy-mm-dd format
-                                        year = parts[0]
-                                    else:  # dd-mm-yyyy format
-                                        year = parts[2].split()[0]
-                        not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row_idx + 1, 'Fname': fname, 'Lname': lname, 'Year': year})
-                        file_not_found += 1
-                        print(f"NOT FOUND in SIF dataFrame: {fname} {lname}")
+                if self.mode == "sif":
+                    fname = sheet.cell_value(row_idx, fname_col)
+                    lname = sheet.cell_value(row_idx, lname_col)
+                    if fname and lname:
+                        fname = field_cleaner(fname)
+                        lname = field_cleaner(lname)
+                        self.total_checked += 1
+                        file_checked += 1
+
+                        # Find in SIF
+                        new_id = self.sif_lookup.get((fname, lname))
+                        if new_id is not None:
+                            ws.write(row_idx, id_col, new_id)
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            date_value = sheet.cell_value(row_idx, date_col) if date_col is not None else None
+                            year = self._extract_year(date_value)
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row_idx + 1, 'Fname': fname, 'Lname': lname, 'Year': year})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SIF: {fname} {lname}")
+                else:  # ssot
+                    old_id = sheet.cell_value(row_idx, id_col)
+                    if old_id:
+                        self.total_checked += 1
+                        file_checked += 1
+                        cleaned_id = field_cleaner(str(old_id))
+                        new_id = self.ssot_lookup.get(cleaned_id)
+                        if new_id is not None:
+                            ws.write(row_idx, id_col, new_id)
+                            self.total_matched += 1
+                            file_matched += 1
+                        else:
+                            self.not_found.append({'File': file, 'Sheet': sheet_name, 'Row': row_idx + 1, 'Old ID': str(old_id)})
+                            file_not_found += 1
+                            self.logger.debug(f"NOT FOUND in SSOT: {old_id}")
 
         if sheets_processed > 0:
             # Save to DIBELSswapped
-            output_path = os.path.join(dibels_folder, os.path.basename(file))
+            output_path = os.path.join(self.dibels_folder, os.path.basename(file))
             try:
                 wb.save(output_path)
+                self.logger.info(f"Students Checked: {file_checked}")
+                self.logger.info(f"Students Matched: {file_matched}")
+                self.logger.info(f"Students NOT Found: {file_not_found}")
+                self.files_checked.append(os.path.basename(file))
             except Exception as e:
-                print(f"Error saving {output_path}: {e}")
-                input("Please close the file in Excel and press Enter to retry.")
-                try:
-                    wb.save(output_path)
-                except Exception as e2:
-                    print(f"Failed again: {e2}. Skipping save for {file}.")
-            print(f"Students Checked: {file_checked}")
-            print(f"Students Matched: {file_matched}")
-            print(f"Students NOT Found: {file_not_found}")
+                self.logger.error(f"Error saving {output_path}: {e}")
         else:
-            print(f"No valid sheets found in {file}. Skipping file.")
+            self.logger.info(f"No valid sheets found in {file}. Skipping file.")
+            self.files_skipped.append(os.path.basename(file))
+            shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
 
-        if sheets_processed > 0:
-            files_checked.append(os.path.basename(file))
-        else:
-            files_skipped.append(os.path.basename(file))
-            shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
+    def _extract_year(self, date_value):
+        """Extract year from date value."""
+        year = None
+        if date_value:
+            date_str = str(date_value)
+            if '/' in date_str:
+                year = date_str.split('/')[-1].split()[0]
+            elif '-' in date_str:
+                parts = date_str.split('-')
+                if len(parts) >= 3:
+                    if len(parts[0]) == 4:  # yyyy-mm-dd format
+                        year = parts[0]
+                    else:  # dd-mm-yyyy format
+                        year = parts[2].split()[0]
+        return year
 
-    else:
-        print(f"Unsupported file format: {file}. Skipping.")
-        files_skipped.append(os.path.basename(file))
-        shutil.copy(file, os.path.join(skipped_folder, os.path.basename(file)))
+    def _save_report(self):
+        """Save summary and not-found reports."""
+        if not self.not_found and not self.files_checked and not self.files_skipped:
+            return
 
-# Save report
-if not_found or files_checked or files_skipped:
-    # Create summary data
-    summary_data = [
-        {'Metric': 'Total Files Processed', 'Value': len(files_checked)},
-        {'Metric': 'Total Matched', 'Value': total_matched},
-        {'Metric': 'Total NOT Matched', 'Value': len(not_found)},
-        {'Metric': 'Note', 'Value': 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'},
-    ]
-    summary_df = pd.DataFrame(summary_data)
-    
-    not_found_df = pd.DataFrame(not_found)
-    
-    with pd.ExcelWriter(os.path.join(dibels_folder, "DIBELS_report.xlsx")) as writer:
-        summary_df.to_excel(writer, sheet_name='Summary', index=False)
-        not_found_df.to_excel(writer, sheet_name='Full List', index=False)
-        
-        # Add files lists to Summary sheet
-        sheet = writer.sheets['Summary']
-        sheet.cell(row=7, column=1).value = "Files Checked"
-        for i, file in enumerate(files_checked, start=8):
-            sheet.cell(row=i, column=1).value = file
-        
-        sheet.cell(row=7, column=2).value = "Files Skipped"
-        for i, file in enumerate(files_skipped, start=8):
-            sheet.cell(row=i, column=2).value = file
+        report_wb = Workbook()
 
-print(f"Total Students Checked --> {total_checked}")
-print(f"Total Students Matched --> {total_matched}")
-print(f"Total NOT Found --> {len(not_found)}")
+        # Summary sheet
+        summary_ws = report_wb.active
+        summary_ws.title = 'Summary'
+        summary_ws.append(['Metric', 'Value'])
+        summary_ws.append(['Total Files Processed', len(self.files_checked)])
+        summary_ws.append(['Total Matched', self.total_matched])
+        summary_ws.append(['Total NOT Matched', len(self.not_found)])
+        summary_ws.append(['Note', 'Numbers will be exaggerated, because students may be checked multiple times if they are in multiple files.'])
+        summary_ws.append([])
+        summary_ws.append(['Files Checked', 'Files Skipped'])
+        for i in range(max(len(self.files_checked), len(self.files_skipped))):
+            checked = self.files_checked[i] if i < len(self.files_checked) else ''
+            skipped = self.files_skipped[i] if i < len(self.files_skipped) else ''
+            summary_ws.append([checked, skipped])
 
-print(f"Processing complete. Files saved in {dibels_folder} folder.")
+        # Full List sheet
+        if self.not_found:
+            nf_ws = report_wb.create_sheet('Full List')
+            nf_ws.append(list(self.not_found[0].keys()))
+            for entry in self.not_found:
+                nf_ws.append(list(entry.values()))
+
+        report_wb.save(os.path.join(self.dibels_folder, "DIBELS_report.xlsx"))
+        report_wb.close()
+
+
+def main():
+    """Main entry point."""
+    print(r"""
+===================================================================================================
+ _____ ___________ _____ _      _____
+|  _  \_   _| ___ \  ___| |    /  ___|
+| | | | | | | |_/ / |__ | |    \ `--.   ______
+| | | | | | | ___ \  __|| |     `--. \ |______|
+| |/ / _| |_| |_/ / |___| |____/\__/ /
+|___/  \___/\____/\____/\_____/\____/
+
+
+  ___________
+ |_   _|  _  \
+   | | | | | |_____      ____ _ _ __  _ __   ___ _ __
+   | | | | | / __\ \ /\ / / _` | '_ \| '_ \ / _ \ '__|
+  _| |_| |/ /\__ \\ V  V / (_| | |_) | |_) |  __/ |
+  \___/|___/ |___/ \_/\_/ \__,_| .__/| .__/ \___|_|
+                               | |   | |
+                               |_|   |_|
+===================================================================================================
+""")
+
+    # Initialize logger
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logging.ini")
+    logger = THElogger(script_name="DIBELS", config_file=config_path)
+
+    # Initialize and run swapper
+    swapper = DIBELSSwapper(logger)
+    swapper.run()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,100 @@
+Firstname,Surname,Studentnumber,Year Level,Class,AssessmentHeader,AssessmentDomain,AssessmentStrand,Test 1_DateTime,Test 1_Level,Test 1_Score,Test 2_DateTime,Test 2_Level,Test 2_Score,Test 3_DateTime,Test 3_Level,Test 3_Score
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Number and Algebra,General All,18/02/2022 12:21,2.5-4,4,26/05/2022 12:17,2.5-4,3.5,,,
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:22,3.5-5,4,,,,17/03/2022 10:56,3.5-5,4.5
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:15,1.5-5,4,,,,,,
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:51,3.5-5,4.5,,,,1/08/2022 12:34,3.5-5,4
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Number and Algebra,Division,4/08/2022 11:53,5.5-7,6.5,,,,18/08/2022 10:35,5.5-7,6.5
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:07,2.5-4,3.5,14/06/2022 10:22,2.5-4,3.5,,,
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:10,4.5-8,5.5,,,,13/09/2022 12:06,4.5-8,7
+Fname1,Lname1,XXXXX1,3,3A,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:13,2.5-4,3,27/05/2022 13:08,2.5-4,3.5,20/10/2022 12:11,2.5-4,4
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Number and Algebra,General All,18/02/2022 12:19,2.5-4,2.5,26/05/2022 12:16,2.5-4,2.5,,,
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:20,1.5-3,2.5,,,,22/03/2022 12:52,1.5-3,1.5
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:27,0.5-3,1.5,,,,3/06/2022 13:09,0.5-3,2
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:17,0.5-3,1.5,,,,,,
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:35,F.5-4,2.5,,,,1/08/2022 12:22,F.5-4,3.5
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Number and Algebra,Division,4/08/2022 10:45,F.5-4,1.5,,,,18/08/2022 11:46,F.5-4,3.5
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:06,2.5-4,3,,,,,,
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:13,0.5-2,1.5,,,,13/09/2022 12:15,F.5-4,3
+Fname2,Lname2,XXXXX2,3,3A,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:11,2.5-4,3,27/05/2022 13:05,2.5-4,3,20/10/2022 12:14,2.5-4,3.5
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Statistics and Probability,Chance,27/05/2022 13:17,1.5-4,3,,,,,,
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:07,2.5-4,3.5,27/05/2022 13:06,2.5-4,3,20/10/2022 12:12,2.5-4,3.5
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Number and Algebra,General All,18/02/2022 12:21,2.5-4,2.5,14/06/2022 10:40,2.5-4,3.5,,,
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:21,2.5-4,3,,,,17/03/2022 10:44,2.5-4,3.5
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:30,0.5-3,3,,,,3/06/2022 13:09,F.5-4,3.5
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:23,F.5-4,3,,,,,,
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:55,3.5-5,4,,,,1/08/2022 12:10,2.5-4,3
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Number and Algebra,Division,4/08/2022 10:50,F.5-4,3,,,,18/08/2022 13:09,F.5-4,3.5
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:06,2.5-4,3,14/06/2022 10:18,2.5-4,3.5,,,
+Lname3,Fname3,XXXXX3,3,3A,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:07,1.5-3,1.5,,,,13/09/2022 12:03,1.5-4,3.5
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Number and Algebra,General All,18/02/2022 12:20,2.5-4,3.5,26/05/2022 12:24,2.5-4,3.5,,,
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:18,2.5-4,3,,,,17/03/2022 10:48,2.5-4,4
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:35,F.5-4,3.5,,,,3/06/2022 13:30,2.5-6,5
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:05,D-2,2,,,,,,
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:56,3.5-5,4,,,,1/08/2022 12:34,3.5-5,4
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Number and Algebra,Division,9/08/2022 13:15,1.5-5,3.5,,,,18/08/2022 10:51,1.5-5,4
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Measurement and Geometry,General All,22/03/2022 12:56,2.5-4,3.5,14/06/2022 10:24,3.5-5,4.5,,,
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:20,2.5-6,5.5,,,,13/09/2022 12:10,2.5-6,4.5
+Lname4,Fname4,XXXXX4,3,3A,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:09,2.5-4,3,27/05/2022 13:17,2.5-4,3.5,20/10/2022 12:12,2.5-4,4
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Number and Algebra,General All,18/02/2022 12:34,2.5-4,2.5,26/05/2022 12:19,2.5-4,2.5,,,
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:18,2.5-4,3.5,,,,22/03/2022 12:52,2.5-4,3.5
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:35,0.5-3,2.5,,,,3/06/2022 13:15,0.5-3,2
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:21,0.5-3,2.5,,,,,,
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:29,1.5-3,3,,,,1/08/2022 12:26,2.5-4,3.5
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Number and Algebra,Division,4/08/2022 11:54,F.5-4,3.5,,,,18/08/2022 10:48,F.5-4,3.5
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:10,2.5-4,3,14/06/2022 10:20,2.5-4,2.5,,,
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:15,0.5-2,1,,,,13/09/2022 12:15,0.5-2,1.5
+UFname13,ULname13,UNLISTED,3,3A,Essential Assessment,Statistics and Probability,General All,27/05/2022 13:05,2.5-4,2.5,14/06/2022 10:35,2.5-4,3,20/10/2022 12:13,2.5-4,3
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Number and Algebra,General All,18/02/2022 12:17,2.5-4,2,26/05/2022 12:17,2.5-4,2.5,,,
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:26,2.5-4,2.5,,,,22/03/2022 12:45,2.5-4,2.5
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Number and Algebra,Addition,3/06/2022 13:31,1.5-5,2.5,,,,,,
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:16,D-2,1.5,,,,,,
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:39,F.5-4,2.5,,,,1/08/2022 12:28,F.5-4,3.5
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Number and Algebra,Division,9/08/2022 13:27,F.5-4,3.5,,,,18/08/2022 13:05,F.5-4,3.5
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:14,2.5-4,3,14/06/2022 10:29,2.5-4,2.5,,,
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:15,0.5-2,F.5,,,,13/09/2022 12:12,0.5-2,1.5
+Fname5,Lname5,XXXXX5,3,3A,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:24,2.5-4,3,27/05/2022 13:12,2.5-4,3.5,20/10/2022 12:16,2.5-4,3
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,Number and Place Value,22/03/2022 12:49,1.5-4,4,,,,,,
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,General All,18/02/2022 12:17,2.5-4,3.5,26/05/2022 12:17,2.5-4,3.5,,,
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:18,2.5-4,4,,,,17/03/2022 10:42,2.5-4,4
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:25,F.5-4,4,,,,3/06/2022 13:41,2.5-6,5.5
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:18,1.5-5,4.5,,,,,,
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:49,3.5-5,4.5,,,,1/08/2022 12:22,3.5-5,4.5
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Number and Algebra,Division,18/08/2022 13:14,4.5-6,5.5,,,,,,
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:16,2.5-4,3,14/06/2022 10:23,2.5-4,3.5,,,
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:14,1.5-4,3.5,,,,13/09/2022 12:05,1.5-4,3.5
+Fname6,Lname6,XXXXX6,3,3B,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:10,2.5-4,3,27/05/2022 13:06,2.5-4,3.5,20/10/2022 12:16,2.5-4,4
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Number and Algebra,General All,18/02/2022 12:18,2.5-4,2,26/05/2022 12:14,2.5-4,2,,,
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Number and Algebra,Whole Numbers,17/03/2022 10:57,F.5-2,1,,,,22/03/2022 12:54,F.5-2,1
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:43,D-2,1.5,,,,3/06/2022 13:17,0.5-3,2
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:31,0.5-2,1,,,,,,
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:30,0.5-3,2,,,,1/08/2022 12:10,0.5-3,2
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Number and Algebra,Division,4/08/2022 10:45,D-2,1.5,,,,18/08/2022 10:30,0.5-3,2
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:07,1.5-3,1,14/06/2022 10:16,F.5-2,1,,,
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:15,0.5-2,1,,,,13/09/2022 12:05,0.5-2,F.5
+Fname7,Lname7,XXXXX7,3,3B,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:06,2.5-4,2,27/05/2022 13:12,2.5-4,2,20/10/2022 12:16,2.5-4,2.5
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Number and Algebra,General All,18/02/2022 12:20,2.5-4,3.5,26/05/2022 12:19,2.5-4,3.5,,,
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:23,2.5-4,3,,,,17/03/2022 10:48,2.5-4,3.5
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:28,1.5-5,4,,,,,,
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:51,3.5-5,4,,,,1/08/2022 12:25,3.5-5,4
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Number and Algebra,Division,9/08/2022 13:29,4.5-6,4.5,,,,18/08/2022 10:36,3.5-5,4
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:14,2.5-4,2.5,14/06/2022 10:20,2.5-4,2.5,,,
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:18,3.5-6,3.5,,,,13/09/2022 12:20,2.5-5,3.5
+Fname8,Lname8,XXXXX8,3,3B,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:12,2.5-4,3.5,27/05/2022 13:16,2.5-4,3,20/10/2022 12:13,2.5-4,2.5
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Number and Algebra,General All,18/02/2022 12:12,2.5-4,3,26/05/2022 12:16,2.5-4,3.5,,,
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Number and Algebra,Whole Numbers,17/03/2022 10:51,2.5-6,4.5,,,,22/03/2022 12:55,2.5-6,5
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:29,F.5-4,4,,,,3/06/2022 13:21,2.5-6,5.5
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:18,1.5-5,4.5,,,,,,
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:37,3.5-5,4.5,,,,1/08/2022 12:14,3.5-5,4
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Number and Algebra,Division,9/08/2022 13:12,4.5-6,5,,,,18/08/2022 10:33,3.5-5,4
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:07,2.5-4,3,14/06/2022 10:19,2.5-4,3.5,,,
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:17,3.5-6,4.5,,,,13/09/2022 12:06,2.5-5,3.5
+Fname9,Lname9,XXXXX9,3,3B,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:11,2.5-4,3,27/05/2022 13:10,2.5-4,3.5,20/10/2022 12:12,2.5-4,3.5
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Number and Algebra,General All,18/02/2022 12:22,2.5-4,2,26/05/2022 12:23,2.5-4,2.5,,,
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Number and Algebra,Whole Numbers,9/02/2022 10:19,2.5-4,2.5,,,,22/03/2022 13:04,2.5-4,2.5
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Number and Algebra,Addition,16/05/2022 12:31,D-2,1.5,,,,3/06/2022 13:10,D-2,1
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Number and Algebra,Subtraction,22/06/2022 12:18,D-2,1.5,,,,,,
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Number and Algebra,Multiplication,17/06/2022 9:41,0.5-3,1.5,,,,1/08/2022 12:09,0.5-3,2
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Number and Algebra,Division,4/08/2022 10:45,D-2,1,,,,18/08/2022 10:28,D-2,1
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Measurement and Geometry,General All,18/03/2022 12:19,2.5-4,2.5,14/06/2022 10:24,1.5-3,2,,,
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Measurement and Geometry,Time,29/08/2022 13:07,D-1,F,,,,13/09/2022 12:11,0.5-2,1.5
+Fname10,Lname10,XXXXX10,3,3B,Essential Assessment,Statistics and Probability,General All,1/03/2022 12:13,2.5-4,2.5,27/05/2022 13:09,2.5-4,2.5,20/10/2022 12:18,2.5-4,2.5
