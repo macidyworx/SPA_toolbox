@@ -15,6 +15,20 @@ import wx
 from typing import List, Optional
 
 
+# Module-level app instance to prevent garbage collection
+_app_instance = None
+
+
+def _ensure_app():
+    """Return the existing wx.App or create one if none exists."""
+    global _app_instance
+    app = wx.GetApp()
+    if app is None:
+        app = wx.App(False)
+        _app_instance = app  # Store at module level to keep it alive
+    return app
+
+
 def select_output_folder(title="Select output folder"):
     """Prompt user to select an output directory.
 
@@ -34,14 +48,6 @@ def select_output_folder(title="Select output folder"):
         return None
     finally:
         dlg.Destroy()
-
-
-def _ensure_app():
-    """Return the existing wx.App or create one if none exists."""
-    app = wx.GetApp()
-    if app is None:
-        app = wx.App(False)
-    return app
 
 
 def _collect_from_folder(folder, extensions):

@@ -25,12 +25,17 @@ SIF_HEADERS = {
     5: "StudentID",
 }
 
+# Module-level app instance to prevent garbage collection
+_app_instance = None
+
 
 def _ensure_app():
     """Return the existing wx.App or create one if none exists."""
+    global _app_instance
     app = wx.GetApp()
     if app is None:
         app = wx.App(False)
+        _app_instance = app  # Store at module level to keep it alive
     return app
 
 
