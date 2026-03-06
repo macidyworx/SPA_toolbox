@@ -263,7 +263,7 @@ class OBSSwapper:
             mode = "ssot"
             ssot_info = lookup_result
 
-        files = select_work_files([".xlsx", ".xls"])
+        files = select_work_files([".xlsx", ".xlsm", ".xls"])
         if not files:
             self.logger.info("No working files selected.")
             self.logger.finalize_report()
@@ -341,7 +341,7 @@ class OBSSwapper:
             file_matched = 0
             file_not_found = 0
 
-            if file.lower().endswith('.xlsx'):
+            if file.lower().endswith(('.xlsx', '.xlsm')):
                 wb = load_workbook(file)
 
                 # Try all tabs — process any that have matching headers
