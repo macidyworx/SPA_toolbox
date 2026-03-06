@@ -119,6 +119,10 @@ class FileSorter:
 
             if test_type is None:
                 summary["unidentified"].append(filepath)
+                unid_dir = os.path.join(output_folder, "Unidentified")
+                os.makedirs(unid_dir, exist_ok=True)
+                unid_path = get_unique_path(os.path.join(unid_dir, filename))
+                shutil.copy2(filepath, unid_path)
                 continue
 
             # Resolve output path and copy
@@ -193,13 +197,94 @@ class FileSorter:
                 self._message(f"  {elapsed:.2f}s  {name}")
 
 
+# === PROGRESS DIALOG ===
+class ProgressDialog:
+    """wxPython progress dialog with file counter, filename display, and cancel."""
+
+    def __init__(self, total_files):
+        import wx
+        self._wx = wx
+        self.total_files = total_files
+        self._cancelled = False
+
+        self._dlg = wx.Dialog(None, title="Sorting Files",
+                              style=wx.DEFAULT_DIALOG_STYLE)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.counter_label = wx.StaticText(self._dlg, label="File 0 of 0")
+        sizer.Add(self.counter_label, 0, wx.ALL | wx.EXPAND, 10)
+
+        self.filename_label = wx.StaticText(self._dlg, label="")
+        sizer.Add(self.filename_label, 0, wx.ALL | wx.EXPAND, 10)
+
+        self.progress_bar = wx.Gauge(self._dlg, range=max(1, total_files))
+        sizer.Add(self.progress_bar, 0, wx.ALL | wx.EXPAND, 10)
+
+        cancel_btn = wx.Button(self._dlg, wx.ID_CANCEL, "Cancel")
+        cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
+        sizer.Add(cancel_btn, 0, wx.ALL | wx.CENTER, 10)
+
+        self._dlg.SetSizer(sizer)
+        self._dlg.SetSize(400, 200)
+        self._dlg.Centre()
+
+    def show(self):
+        self._dlg.Show()
+
+    def update(self, current_index, filename):
+        self.counter_label.SetLabel(f"File {current_index} of {self.total_files}")
+        self.filename_label.SetLabel(f"Processing: {filename}")
+        self.progress_bar.SetValue(current_index)
+        self._dlg.Refresh()
+        self._wx.SafeYield()
+
+    def is_cancelled(self):
+        return self._cancelled
+
+    def destroy(self):
+        self._dlg.Destroy()
+
+    def _on_cancel(self, event):
+        self._cancelled = True
+        self._dlg.EndModal(self._wx.ID_CANCEL)
+
+
+def _create_progress_callback():
+    """Create a progress callback that manages a wxPython progress dialog."""
+    progress_dialog = None
+
+    def progress_handler(current_index, total_count, filename):
+        nonlocal progress_dialog
+
+        if progress_dialog is None:
+            progress_dialog = ProgressDialog(total_count)
+            progress_dialog.show()
+
+        progress_dialog.update(current_index, filename)
+
+        if progress_dialog.is_cancelled():
+            progress_dialog.destroy()
+            return False
+
+        if current_index >= total_count:
+            progress_dialog.destroy()
+
+        return True
+
+    return progress_handler
+
+
 # === STANDALONE ENTRY POINT ===
 def main():
     """Entry point for standalone execution.
 
-    Uses dog_box dialogs to prompt for input and output folders.
+    Uses dog_box dialogs to prompt for input and output folders,
+    and a progress dialog during sorting.
     """
+    import wx
     from Helpers.dog_box.work_files import select_output_folder
+
+    app = wx.App(False)
 
     input_folder = select_output_folder(title="Select INPUT folder to sort")
     if input_folder is None:
@@ -214,8 +299,10 @@ def main():
     print(f"Input:  {input_folder}")
     print(f"Output: {output_folder}")
 
-    sorter = FileSorter()
+    sorter = FileSorter(progress_callback=_create_progress_callback())
     sorter.sort_files(input_folder, output_folder)
+
+    app.Destroy()
 
 
 if __name__ == "__main__":
