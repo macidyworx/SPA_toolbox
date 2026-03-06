@@ -113,6 +113,35 @@ When tests need to be run, use these commands:
 
 Helper modules should not depend on external project utilities (e.g. loggers). They should only use standard library, their own sibling helpers, and declared pip dependencies (openpyxl, wxPython).
 
+### Using clean_field for text matching
+
+**Always use `field_cleaner()` for any text comparison/matching operations.** This ensures robust handling of real-world data with unicode variations, extra whitespace, and mixed case.
+
+**Critical pattern: Normalize both sides of the comparison while keeping source data readable:**
+
+```python
+from Helpers.Clean_fields.clean_field import field_cleaner
+
+# ✓ CORRECT: Keep lookup table readable, normalize both sides
+TARGET_HEADERS = {
+    "Family name": "family_name",
+    "Given name": "given_name",
+    "Unique ID": "unique_id",
+}
+
+# When matching, normalize both lookup keys and incoming value
+normalized_headers = {field_cleaner(k, strip_spaces=True): v for k, v in TARGET_HEADERS.items()}
+incoming = field_cleaner(str(cell.value), strip_spaces=True)
+
+if incoming in normalized_headers:
+    result = normalized_headers[incoming]
+```
+
+**Benefits:**
+- Better debuggability: Source code shows readable headers; if matching fails, you can trace exactly what `field_cleaner` produced
+- Handles edge cases: unicode, extra whitespace, case variations all normalized consistently
+- Single source of truth: Only one place to see what headers/values are expected
+
 ### Commit Messages
 
 ```
