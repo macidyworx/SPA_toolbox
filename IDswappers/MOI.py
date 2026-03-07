@@ -1,3 +1,8 @@
+"""
+MOI.py - Swaps student IDs in MOI (Mathematics Online Interview) Excel files based on SIF or SSOT lookup.
+"""
+
+# === IMPORTS ===
 import os
 import sys
 
@@ -15,8 +20,9 @@ from Helpers.Clean_fields.clean_field import field_cleaner
 from Helpers.dog_box import select_single_file, select_work_files, select_output_folder
 from water_logged.the_logger import THElogger
 
-# Global constants for headers
-FILE_STUDENT_HEADER = "Student" ## Stored as "Surname, Firstname"
+
+# === CONSTANTS ===
+FILE_STUDENT_HEADER = "Student"  # Stored as "Surname, Firstname"
 FILE_ID_HEADER = "ID"
 FILE_DATE_HEADER = "Date"
 SIF_SURNAME = "Surname"
@@ -24,6 +30,7 @@ SIF_FIRSTNAME = "Firstname"
 SIF_STUDENTID = "StudentID"
 
 
+# === MAIN CLASS ===
 class MOISwapper:
     """
     MOI (Mathematics Online Interview Insight Platform) Swapper.
@@ -167,12 +174,16 @@ class MOISwapper:
         wb = load_workbook(file)
         ws = wb.active  # Assume first sheet
 
-        # Find "Student" cell
+        # Find "Student" cell using field_cleaner for robust matching
         student_col = None
         header_row = None
+        student_normalized = field_cleaner(FILE_STUDENT_HEADER, strip_spaces=True)
         for row in ws.iter_rows():
             for cell in row:
-                if cell.value and str(cell.value).lower() == FILE_STUDENT_HEADER.lower():
+                if cell.value is None:
+                    continue
+                cell_normalized = field_cleaner(str(cell.value), strip_spaces=True)
+                if cell_normalized == student_normalized:
                     student_col = cell.column_letter
                     header_row = cell.row
                     break
@@ -185,25 +196,25 @@ class MOISwapper:
             shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
             return
 
-        # Find "ID" in the header row
+        # Find "ID" and "Date" in the header row using field_cleaner
         id_col = None
+        date_col = None
+        id_normalized = field_cleaner(FILE_ID_HEADER, strip_spaces=True)
+        date_normalized = field_cleaner(FILE_DATE_HEADER, strip_spaces=True)
         for cell in ws[header_row]:
-            if cell.value and str(cell.value).lower() == FILE_ID_HEADER.lower():
+            if cell.value is None:
+                continue
+            cell_normalized = field_cleaner(str(cell.value), strip_spaces=True)
+            if cell_normalized == id_normalized and id_col is None:
                 id_col = cell.column_letter
-                break
+            elif cell_normalized == date_normalized and date_col is None:
+                date_col = cell.column_letter
 
         if not id_col:
             self.logger.info(f"Warning: '{FILE_ID_HEADER}' header not found in {file}. Skipping.")
             self.files_skipped.append(os.path.basename(file))
             shutil.copy(file, os.path.join(self.skipped_folder, os.path.basename(file)))
             return
-
-        # Find "Date" in the header row
-        date_col = None
-        for cell in ws[header_row]:
-            if cell.value and str(cell.value).lower().startswith("date"):
-                date_col = cell.column_letter
-                break
 
         self.files_checked.append(os.path.basename(file))
 
@@ -295,15 +306,22 @@ class MOISwapper:
         id_col = None
         date_col = None
         sheet = rb.sheet_by_index(0)
+        # Normalize header lookup keys using field_cleaner
+        student_normalized = field_cleaner(FILE_STUDENT_HEADER, strip_spaces=True)
+        id_normalized = field_cleaner(FILE_ID_HEADER, strip_spaces=True)
+        date_normalized = field_cleaner(FILE_DATE_HEADER, strip_spaces=True)
         for row_idx in range(sheet.nrows):
             row = sheet.row(row_idx)
             for col_idx, cell in enumerate(row):
-                if cell.value and str(cell.value).lower() == FILE_STUDENT_HEADER.lower():
+                if cell.value is None:
+                    continue
+                cell_normalized = field_cleaner(str(cell.value), strip_spaces=True)
+                if cell_normalized == student_normalized and student_col is None:
                     student_col = col_idx
                     header_row = row_idx
-                elif cell.value and str(cell.value).lower() == FILE_ID_HEADER.lower():
+                elif cell_normalized == id_normalized and id_col is None:
                     id_col = col_idx
-                elif cell.value and str(cell.value).lower().startswith("date"):
+                elif cell_normalized == date_normalized and date_col is None:
                     date_col = col_idx
             if student_col is not None and id_col is not None:
                 break
@@ -469,6 +487,7 @@ class MOISwapper:
         wb.save(report_path)
 
 
+# === STANDALONE EXECUTION ===
 def main():
     """Main entry point for MOI Swapper."""
     print(r"""

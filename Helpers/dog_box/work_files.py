@@ -10,15 +10,18 @@ Supports three selection modes via a single dialog:
 The caller provides the acceptable file extensions (e.g. ['.xlsx', '.xls']).
 """
 
+# === IMPORTS ===
 import os
 import wx
 from typing import List, Optional
 
 
+# === CONSTANTS ===
 # Module-level app instance to prevent garbage collection
 _app_instance = None
 
 
+# === MAIN FUNCTIONS/CLASSES ===
 def _ensure_app():
     """Return the existing wx.App or create one if none exists."""
     global _app_instance
