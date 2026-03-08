@@ -2,14 +2,58 @@
 
 SPA_toolbox uses pytest for automated testing. Tests are organized by module in the `tests/` directory.
 
-## Running Tests
+## Quick Start: Using `run_tests.py`
+
+The **`run_tests.py`** wrapper script is the recommended way to run tests. It provides convenient test selection and **automatically filters JSON reports to show only failures** (keeping file sizes small).
+
+### Common Commands
+
+```bash
+# All tests
+python run_tests.py
+
+# Specific test
+python run_tests.py -t tests/test_dog_box/test_ssotsif.py::test_valid_sif
+
+# Multiple tests
+python run_tests.py -t tests/test_dog_box/test_ssotsif.py::test_valid_sif tests/test_clean_fields.py
+
+# By path
+python run_tests.py -t tests/test_dog_box/
+
+# By keyword pattern
+python run_tests.py -k "sif"
+python run_tests.py -k "sif or work_files"
+
+# Show all tests in JSON (including passed)
+python run_tests.py -v
+
+# Don't generate JSON report
+python run_tests.py --no-json
+
+# Get help
+python run_tests.py --help
+```
+
+### Benefits of `run_tests.py`
+
+✅ **Failure-only JSON reports** — Small file size (no passing test noise)
+✅ **Flexible test selection** — By path, specific tests, or keyword
+✅ **Automatic venv detection** — Uses `.venv/bin/pytest` if available
+✅ **Clean summary output** — Shows passed/failed/skipped at a glance
+
+---
+
+## Direct pytest Commands (Advanced)
+
+If you prefer to use pytest directly, here are the equivalent commands:
 
 ### Full Test Suite
 ```bash
 pytest
 ```
 
-### Run Tests by Feature
+### Run Tests by Feature (requires `@pytest.mark` decorators)
 ```bash
 pytest -m dog_box
 pytest -m clean_fields
