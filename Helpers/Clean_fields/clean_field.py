@@ -2,11 +2,15 @@
 clean_field.py
 Reusable text normalization utility for robust cell/text comparison.
 """
+
+# === IMPORTS ===
 import unicodedata
 import re
 
 _ws_re = re.compile(r'\s+')
 
+
+# === MAIN FUNCTIONS/CLASSES ===
 def field_cleaner(text, lowercase=True, collapse_whitespace=True, strip_spaces=True, strip_bom=True, unicode_form='NFKC'):
     """
     Normalize text for robust comparison:

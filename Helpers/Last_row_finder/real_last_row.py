@@ -4,10 +4,12 @@ Find the actual last row with data in an Excel column.
 Works around openpyxl's max_row reporting phantom rows from activated-but-empty cells.
 """
 
+# === IMPORTS ===
 from openpyxl import load_workbook
 from openpyxl.utils import column_index_from_string
 
 
+# === MAIN FUNCTIONS/CLASSES ===
 def ws_last_row(ws, column):
     """
     Find the last row with data in a specific column of an already-open worksheet.

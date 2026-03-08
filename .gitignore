@@ -4,3 +4,5 @@ __pycache__/
 logs/
 logs/PATdownloads_log.txt
 logs/PATdownloads_Report.xlsx
+.report.json
+test_report.json

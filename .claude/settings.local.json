@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/bin/pytest -v)",
+      "Bash(python -m pytest --version)",
+      "Bash(python -m venv .venv)",
+      "Bash(source .venv/Scripts/activate)",
+      "Bash(pip install -q -r requirements.txt --ignore-installed)",
+      "Bash(git mv:*)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(.venv/bin/pytest:*)",
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "Bash(chmod +x:*)"
+    ]
+  }
+}

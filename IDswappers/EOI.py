@@ -1,3 +1,8 @@
+"""
+EOI.py - Swaps student IDs in EOI Template Excel files based on SIF or SSOT lookup.
+"""
+
+# === IMPORTS ===
 import os
 import sys
 
@@ -14,7 +19,8 @@ from Helpers.dog_box import select_single_file, select_work_files, select_output
 from openpyxl.utils import column_index_from_string
 from water_logged.the_logger import THElogger
 
-# Global constants for headers
+
+# === CONSTANTS ===
 FILE_FNAME = "First Name"
 FILE_LNAME = "Last Name"
 FILE_ID_HEADER = "ID"
@@ -24,6 +30,7 @@ SIF_FIRSTNAME = "Firstname"
 SIF_STUDENTID = "StudentID"
 
 
+# === MAIN CLASS ===
 class EOISwapper:
     """Processes EOI Template Excel files and swaps student IDs based on SIF."""
 
@@ -171,17 +178,29 @@ class EOISwapper:
             lname_col = None
             id_col = None
             date_col = None
+            # Normalize header lookup keys using field_cleaner
+            header_lookup = {
+                field_cleaner(FILE_FNAME, strip_spaces=True): 'fname',
+                field_cleaner(FILE_LNAME, strip_spaces=True): 'lname',
+                field_cleaner(FILE_ID_HEADER, strip_spaces=True): 'id',
+                field_cleaner(FILE_DATE_HEADER, strip_spaces=True): 'date',
+            }
             for row in ws.iter_rows():
                 for cell in row:
-                    if cell.value == FILE_FNAME:
-                        fname_col = cell.column_letter
-                        header_row = cell.row
-                    elif cell.value == FILE_LNAME:
-                        lname_col = cell.column_letter
-                    elif cell.value == FILE_ID_HEADER:
-                        id_col = cell.column_letter
-                    elif cell.value == FILE_DATE_HEADER:
-                        date_col = cell.column_letter
+                    if cell.value is None:
+                        continue
+                    cell_normalized = field_cleaner(str(cell.value), strip_spaces=True)
+                    if cell_normalized in header_lookup:
+                        header_type = header_lookup[cell_normalized]
+                        if header_type == 'fname':
+                            fname_col = cell.column_letter
+                            header_row = cell.row
+                        elif header_type == 'lname':
+                            lname_col = cell.column_letter
+                        elif header_type == 'id':
+                            id_col = cell.column_letter
+                        elif header_type == 'date':
+                            date_col = cell.column_letter
                 if fname_col and lname_col and id_col:
                     break
 
@@ -282,18 +301,30 @@ class EOISwapper:
             id_col = None
             date_col = None
             sheet = rb.sheet_by_index(0)
+            # Normalize header lookup keys using field_cleaner
+            header_lookup = {
+                field_cleaner(FILE_FNAME, strip_spaces=True): 'fname',
+                field_cleaner(FILE_LNAME, strip_spaces=True): 'lname',
+                field_cleaner(FILE_ID_HEADER, strip_spaces=True): 'id',
+                field_cleaner(FILE_DATE_HEADER, strip_spaces=True): 'date',
+            }
             for row_idx in range(sheet.nrows):
                 row = sheet.row(row_idx)
                 for col_idx, cell in enumerate(row):
-                    if cell.value == FILE_FNAME:
-                        fname_col = col_idx
-                        header_row = row_idx
-                    elif cell.value == FILE_LNAME:
-                        lname_col = col_idx
-                    elif cell.value == FILE_ID_HEADER:
-                        id_col = col_idx
-                    elif cell.value == FILE_DATE_HEADER:
-                        date_col = col_idx
+                    if cell.value is None:
+                        continue
+                    cell_normalized = field_cleaner(str(cell.value), strip_spaces=True)
+                    if cell_normalized in header_lookup:
+                        header_type = header_lookup[cell_normalized]
+                        if header_type == 'fname':
+                            fname_col = col_idx
+                            header_row = row_idx
+                        elif header_type == 'lname':
+                            lname_col = col_idx
+                        elif header_type == 'id':
+                            id_col = col_idx
+                        elif header_type == 'date':
+                            date_col = col_idx
                 if fname_col is not None and lname_col is not None and id_col is not None:
                     break
 
@@ -413,6 +444,7 @@ class EOISwapper:
         report_wb.close()
 
 
+# === STANDALONE EXECUTION ===
 def main():
     """Main entry point."""
     print(r"""
