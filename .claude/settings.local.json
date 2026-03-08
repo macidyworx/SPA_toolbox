@@ -11,7 +11,11 @@
       "Bash(.venv/bin/pytest:*)",
       "Bash(ls:*)",
       "Bash(git commit:*)",
-      "Bash(chmod +x:*)"
+      "Bash(chmod +x:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(/tmp/test_summary.txt:*)",
+      "Read(//tmp/**)"
     ]
   }
 }

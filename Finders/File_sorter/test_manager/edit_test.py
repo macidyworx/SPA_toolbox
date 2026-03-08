@@ -108,7 +108,7 @@ class EditTestDetailDialog(wx.Dialog):
         fields_sizer = wx.FlexGridSizer(cols=2, vgap=6, hgap=10)
         fields_sizer.AddGrowableCol(1, 1)
 
-        fields_sizer.Add(wx.StaticText(panel, label="Test Name:"), 0, wx.ALIGN_CV)
+        fields_sizer.Add(wx.StaticText(panel, label="Test Name:"), 0, wx.ALIGN_CENTER_VERTICAL)
         self.name_ctrl = wx.TextCtrl(panel, value=self.test_name)
         fields_sizer.Add(self.name_ctrl, 1, wx.EXPAND)
 
@@ -125,7 +125,7 @@ class EditTestDetailDialog(wx.Dialog):
             ("ID_HEADER", "ID Header:"),
         ]
         for field, label in basic_fields:
-            fields_sizer.Add(wx.StaticText(panel, label=label), 0, wx.ALIGN_CV)
+            fields_sizer.Add(wx.StaticText(panel, label=label), 0, wx.ALIGN_CENTER_VERTICAL)
             ctrl = wx.TextCtrl(panel, value=str(self.test_data.get(field, "")))
             self.field_ctrls[field] = ctrl
             fields_sizer.Add(ctrl, 1, wx.EXPAND)
@@ -150,7 +150,7 @@ class EditTestDetailDialog(wx.Dialog):
                     row_sizer = wx.BoxSizer(wx.HORIZONTAL)
                     for k, v in entry.items():
                         row_sizer.Add(wx.StaticText(panel, label=f"{k}:"),
-                                      0, wx.ALIGN_CV | wx.RIGHT, 2)
+                                      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 2)
                         ctrl = wx.TextCtrl(panel, value=str(v), size=(100, -1),
                                            name=f"{ft}|{key_type}|{i}|{k}")
                         row_sizer.Add(ctrl, 0, wx.RIGHT, 8)
@@ -170,7 +170,7 @@ class EditTestDetailDialog(wx.Dialog):
 
         # File type checkboxes
         ft_row = wx.BoxSizer(wx.HORIZONTAL)
-        ft_row.Add(wx.StaticText(panel, label="To file types:"), 0, wx.ALIGN_CV | wx.RIGHT, 8)
+        ft_row.Add(wx.StaticText(panel, label="To file types:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         self.ft_checks = {}
         for ft in FILETYPES:
             cb = wx.CheckBox(panel, label=ft)
@@ -180,13 +180,13 @@ class EditTestDetailDialog(wx.Dialog):
 
         # Add KEY row
         key_row = wx.BoxSizer(wx.HORIZONTAL)
-        key_row.Add(wx.StaticText(panel, label="Sheet:"), 0, wx.ALIGN_CV | wx.RIGHT, 4)
+        key_row.Add(wx.StaticText(panel, label="Sheet:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
         self.add_key_sheet = wx.TextCtrl(panel, value="0", size=(40, -1))
         key_row.Add(self.add_key_sheet, 0, wx.RIGHT, 8)
-        key_row.Add(wx.StaticText(panel, label="Cell:"), 0, wx.ALIGN_CV | wx.RIGHT, 4)
+        key_row.Add(wx.StaticText(panel, label="Cell:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
         self.add_key_cell = wx.TextCtrl(panel, size=(50, -1))
         key_row.Add(self.add_key_cell, 0, wx.RIGHT, 8)
-        key_row.Add(wx.StaticText(panel, label="Startswith:"), 0, wx.ALIGN_CV | wx.RIGHT, 4)
+        key_row.Add(wx.StaticText(panel, label="Startswith:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
         self.add_key_sw = wx.TextCtrl(panel, size=(120, -1))
         key_row.Add(self.add_key_sw, 1, wx.RIGHT, 8)
         add_key_btn = wx.Button(panel, label="Add Key")
@@ -196,10 +196,10 @@ class EditTestDetailDialog(wx.Dialog):
 
         # Add FIND_KEY row
         fk_row = wx.BoxSizer(wx.HORIZONTAL)
-        fk_row.Add(wx.StaticText(panel, label="Sheet:"), 0, wx.ALIGN_CV | wx.RIGHT, 4)
+        fk_row.Add(wx.StaticText(panel, label="Sheet:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
         self.add_fk_sheet = wx.TextCtrl(panel, value="0", size=(40, -1))
         fk_row.Add(self.add_fk_sheet, 0, wx.RIGHT, 8)
-        fk_row.Add(wx.StaticText(panel, label="Startswith:"), 0, wx.ALIGN_CV | wx.RIGHT, 4)
+        fk_row.Add(wx.StaticText(panel, label="Startswith:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
         self.add_fk_sw = wx.TextCtrl(panel, size=(120, -1))
         fk_row.Add(self.add_fk_sw, 1, wx.RIGHT, 8)
         add_fk_btn = wx.Button(panel, label="Add Find Key")
